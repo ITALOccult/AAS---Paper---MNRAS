@@ -1,0 +1,125 @@
+%% sections/02d_order_and_shadow.tex
+%% Sezione 2.x — Order Analysis and Shadow Hamiltonian
+%% Da inserire dopo 02c_time_reversal_proof.tex
+
+\subsection{Order of the Method and Shadow Hamiltonian}
+\label{sec:order_and_shadow}
+\label{sec:shadow}
+
+\subsubsection{Local Truncation Error via BCH}
+\label{sec:bch_analysis}
+
+The Baker-Campbell-Hausdorff (BCH) formula gives the effective
+Hamiltonian $\tilde{H}_h$ such that the one-step map
+$\Phi_h = \exp(h\,L_{\tilde{H}_h})$ exactly, where
+$L_H$ denotes the Lie derivative associated with $H$.
+For the leapfrog (second-order Störmer-Verlet) map:
+\begin{equation}
+  \tilde{H}^{(2)}_h = H + \frac{h^2}{24}
+    \bigl\{V,\{V,T\}\bigr\}
+    + \frac{h^2}{12}\bigl\{T,\{T,V\}\bigr\}
+    + \mathcal{O}(h^4),
+  \label{eq:shadow_leapfrog}
+\end{equation}
+where $\{A,B\} = \nabla_\vp A \cdot \nabla_\vq B
+- \nabla_\vq A \cdot \nabla_\vp B$ is the Poisson bracket
+\citep{HairerLubichWanner2006}.
+
+For the Yoshida-4 composition with coefficients $w_0, w_1$
+(Equation~\ref{eq:yoshida_coeffs}), the BCH expansion gives:
+\begin{equation}
+  \tilde{H}^{(4)}_h = H + h^4\,\sigma_4\,E_4 + \mathcal{O}(h^6),
+  \label{eq:shadow_yoshida}
+\end{equation}
+where
+\begin{equation}
+  \sigma_4 = \frac{2w_1^4 + w_0^4}{24}
+  \approx 0.041,
+  \label{eq:sigma4}
+\end{equation}
+and $E_4$ is a fourth-order error term involving fourth-order
+Poisson brackets of $T$ and $V$. The specific form relevant for
+the gravitational potential $V = -\mu/r$ is:
+\begin{equation}
+  E_4 = \frac{1}{2}\bigl\{T,\{T,\{T,V\}\}\bigr\}
+       + \frac{1}{6}\bigl\{V,\{V,\{V,T\}\}\bigr\}.
+  \label{eq:E4_brackets}
+\end{equation}
+
+\subsubsection{Explicit Form of the Shadow Hamiltonian}
+\label{sec:shadow_explicit}
+
+Evaluating the Poisson brackets in \eqref{eq:E4_brackets} for
+$T = |\vp|^2/2$ and $V = -\mu/r$:
+
+\paragraph{First bracket.}
+$\{T,V\} = \vp \cdot \nabla_\vq V = \vp \cdot (\mu\vq/r^3)
+= \mu(\vp\cdot\hat{\vq})/r^2$.
+
+\paragraph{Second bracket.}
+$\{T,\{T,V\}\} = \nabla_\vp[\{T,V\}] \cdot \nabla_\vq T$
+requires the full computation; the result involves
+$\mu|\vp|^2/r^3 - 3\mu(\vp\cdot\hat{\vq})^2/r^3$.
+
+\paragraph{Leading shadow correction.}
+After evaluation, the shadow Hamiltonian takes the form:
+\begin{equation}
+  \boxed{
+  \tilde{H} = H + h^4\,\sigma_4
+  \Bigl[
+    |\nabla\Phi|^2\,\Phi'' + \vp^T\,\mathbf{H}(\Phi)\,\vp\,\Phi''
+  \Bigr]
+  + \mathcal{O}(h^6),
+  }
+  \label{eq:shadow_hamiltonian}
+\end{equation}
+where $\Phi = -\mu/r$ is the gravitational potential,
+$\Phi'' = \mu/r^3$,
+$|\nabla\Phi|^2 = (\mu/r^2)^2$, and
+$\mathbf{H}(\Phi)$ is the Hessian matrix of $\Phi$
+(Equation~\ref{eq:A_matrix}).
+
+The shadow Hamiltonian $\tilde{H}$ is exactly conserved by the
+discrete flow of $\Phi_h$ (to the order shown), so
+$|\Delta\tilde{H}/\tilde{H}_0|$ measures the residual numerical
+error after accounting for the leading shadow correction.
+The diagnostic
+\begin{equation}
+  |\Delta\tilde{H}/\tilde{H}_0| \ll |\Delta H/H_0|
+  \label{eq:shadow_diagnostic}
+\end{equation}
+confirms that the integrator is operating in the shadow
+Hamiltonian regime, i.e., the physical energy error is
+dominated by the $h^4$ correction rather than by
+higher-order numerical noise
+\citep{HairerLubichWanner2006,Zeebe2023}.
+
+\subsubsection{Fourth-Order Convergence}
+\label{sec:fourth_order}
+
+The global error of the Yoshida-4 method satisfies
+\begin{equation}
+  \|\vq_N - \vq(t_N)\| + \|\vp_N - \vp(t_N)\|
+  = \mathcal{O}(h^4),
+  \label{eq:global_error}
+\end{equation}
+uniformly for $t_N = Nh \leq T$ on any finite time interval.
+This is a consequence of the shadow Hamiltonian analysis: since
+$\tilde{H}^{(4)} - H = \mathcal{O}(h^4)$, the discrete trajectory
+lies exponentially close to the exact trajectory of $\tilde{H}$,
+which in turn is $\mathcal{O}(h^4)$ close to the exact trajectory
+of $H$ \citep[Theorem~IX.3.5]{HairerLubichWanner2006}.
+
+For the adaptive case with step $h = g(\vq)\Delta s$, the
+local error per pseudo-time step is
+$\mathcal{O}(\Delta s^5)$, giving a global error
+\begin{equation}
+  \mathcal{O}\!\left(\frac{g_{\max}^4\,\Delta s^4}{S}\right)
+  = \mathcal{O}(\varepsilon^4),
+  \label{eq:adaptive_global_error}
+\end{equation}
+where $S$ is the total pseudo-time and we used
+$\Delta s \sim \varepsilon/\sqrt{\rho_{\max}(\mathbf{H})}$.
+The precision parameter $\varepsilon$ therefore directly controls
+the global error, as confirmed empirically in
+Figure~\ref{fig:energy_vs_precision}.

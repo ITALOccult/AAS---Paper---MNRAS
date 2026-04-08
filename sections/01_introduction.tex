@@ -1,0 +1,109 @@
+%% sections/01_introduction.tex
+
+\section{Introduction}
+\label{sec:intro}
+
+Long-term numerical integration of asteroid orbits requires
+integrators that are simultaneously accurate, fast, and structurally
+stable. Symplectic integrators \citep{WisdomHolman1991, Yoshida1990}
+are the method of choice because they preserve the geometric structure
+of Hamiltonian flow, preventing secular energy drift over millions of
+orbital periods \citep{HairerLubichWanner2006}. However, standard
+symplectic integrators use a fixed time step, which is computationally
+inefficient for eccentric orbits: the step appropriate near perihelion
+is unnecessarily small near aphelion.
+
+\AAS\ is part of the \astdyn\ C++20 library, whose primary use
+case is the prediction of stellar occultations by solar-system
+minor bodies for the \textit{ITALOccult} network of amateur and
+semi-professional observers.
+The target audience is therefore twofold: (i)~researchers and
+advanced practitioners who require a validated, open-source
+propagator with analytical STM support for orbit determination
+pipelines; and (ii)~community-based observers who need accurate,
+reproducible ephemerides on short timescales (hours to days) for
+occultation planning. These two use cases impose complementary
+requirements: long-term energy conservation for the former,
+and short-term positional accuracy ($\lesssim 1$\,mas) for
+the latter.
+
+Adaptive time-step methods for symplectic integrators were pioneered
+by \citet{PretoTremaine1999} and \citet{MikkolaTanikawa1999}, who
+showed that a Sundman-type reparametrization $dt = g(\mathbf{q})\,ds$
+can preserve symplecticity when $g$ depends only on position
+coordinates. \citet{BlanesIserles2012} subsequently unified and
+extended these approaches in a general framework for separable
+Hamiltonians.
+The key design question is the choice of $g(\mathbf{q})$. Previous
+implementations have used functions of inter-particle separation
+\citep{PretoTremaine1999} or the logarithmic Hamiltonian
+\citep{MikkolaTanikawa1999}. High-order fixed-step integrators
+such as \saba\ \citep{LaskarRobutel2001} provide excellent long-term
+accuracy for nearly circular orbits, but cannot adapt to the
+multiscale dynamics of high-eccentricity objects.
+
+We propose a physically motivated step function based on the spectral
+radius of the gravitational potential Hessian
+$\rhoH = \rho(\nabla^2\Phi(\mathbf{q}))$.
+This quantity: (i) is analytically computable for Keplerian plus
+$J_2$ perturbations; (ii) directly measures local orbital curvature;
+(iii) is already evaluated during force computation, adding no overhead.
+For a Keplerian orbit the resulting step $\Delta t \propto r^{3/2}$
+is identical in scaling to the optimal step derived by
+\citet{PretoTremaine1999} from a time-transformation analysis, here
+obtained from a purely geometric argument.
+
+A further innovation is the analytical propagation of the State
+Transition Matrix (STM) within the Drift-Kick-Drift sequence via
+the same Hessian. Standard numerical STM methods require 12
+additional integrations per step \citep[\S4.2]{bigi_astdyn_2025};
+the \AAS\ approach reduces this to a single matrix update per sub-step.
+
+The \AAS\ integrator is embedded in the \astdyn\ C++20 library
+\citep{bigi_astdyn_2025}, which provides a complete pipeline for
+high-precision asteroid orbit determination and stellar occultation
+prediction. 
+A companion paper (Bigi, in prep.) describes the full
+library pipeline from MPC observations to stellar occultation
+path predictions, validated against JPL Horizons with
+residuals $< 2.5\,\mu$m($10^{-9}$\,AU).
+
+Table~\ref{tab:tools} compares \astdyn\ with existing
+orbit propagation frameworks. Unlike MONTE \citep{evans2018},
+GODOT \citep{godot2020}, and Tudatpy \citep{dirkx2022},
+which target spacecraft mission design, \astdyn\ is optimised
+for the specific requirements of ground-based occultation
+prediction: sub-millisecond latency per query, analytical STM
+for covariance propagation, and direct integration with the
+MPC/Horizons data pipeline. Unlike OrbFit \citep{milani2010}
+and Find\_Orb, \astdyn\ provides a modern C++20 API with
+full uncertainty propagation and is openly licensed.
+
+\begin{table*}
+\centering
+\caption{Comparison of orbit propagation tools.
+\label{tab:tools}}
+\begin{tabular}{lcccc}
+\toprule
+Tool & Language & Open source & Analytical STM & Primary use \\
+\midrule
+MONTE        & Python/C++ & No  & Yes & Spacecraft nav \\
+GODOT        & Python     & No  & Yes & Spacecraft nav \\
+Tudatpy      & Python/C++ & Yes & Yes & Spacecraft nav \\
+OrbFit       & Fortran    & Yes & No  & Asteroid OD    \\
+Find\_Orb    & C++        & Yes & No  & Asteroid OD    \\
+REBOUND      & C/Python   & Yes & No  & N-body sim     \\
+\textbf{\astdyn} & \textbf{C++20} & \textbf{Yes} &
+  \textbf{Yes} & \textbf{Occultations} \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\parbox{0.95\textwidth}{\footnotesize
+OD = orbit determination. STM = State Transition Matrix.
+\astdyn\ is the only open-source tool combining analytical STM with an
+occultation-oriented pipeline.
+}
+\end{table*}
+Section~\ref{sec:discussion} discusses the results and limitations.
+Section~\ref{sec:conclusions} summarizes the conclusions.

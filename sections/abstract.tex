@@ -1,0 +1,46 @@
+%% sections/abstract.tex
+%% Limite AJ: 250 parole. Attuale: ~180 parole — espandere con risultati numerici reali.
+
+We present \AAS\ (AstDyn-Adaptive Symplectic), a fourth-order
+geometric integrator for asteroid orbit propagation, built on a
+symplectic Yoshida Drift-Kick-Drift kernel and an adaptive
+Sundman-type step-size law based on the spectral radius of the local
+gravitational potential Hessian.
+The step function
+\[
+  \Delta t = \eps \,/\, \sqrt{\rho\!\left(\nabla^2\Phi(\mathbf{q})\right)}
+\]
+yields a time step proportional to $r^{3/2}$ for Keplerian motion,
+naturally concentrating computational effort at perihelion while
+preserving the geometric structure of the Hamiltonian flow.
+This scaling is consistent with prior adaptive symplectic literature;
+the specific contribution here is its Hessian-spectral-radius
+formulation, geometric curvature interpretation, and direct reuse of
+the same Hessian for analytical STM propagation.
+The Yoshida fourth-order composition scheme ensures long-term
+quasi-conservation of energy through a well-defined shadow Hamiltonian.
+Harmonic-mean symmetrization of the step function preserves
+discrete time-reversibility.
+Time-reversibility is treated as a distinct property from
+symplecticity: strict symplecticity is proven for the fixed-step
+DKD kernel, while the adaptive map is interpreted through the
+Sundman transformed system (Section~\ref{sec:symplecticity_proof}).
+The State Transition Matrix (STM) is propagated analytically via the
+potential Hessian, eliminating the standard $12N_{\mathrm{steps}}$
+overhead of numerical STM approaches.
+We benchmark \AAS\ against \saba, \rkf, and
+IAS15 \citep{ReinSpiegel2015} on three test asteroids:
+(1)~Ceres ($e=0.0784$), (99942)~Apophis ($e=0.191$),
+and (3200)~Phaethon ($e=0.890$).
+\AAS\ achieves relative energy errors $\dEE < 10^{-10}$ over
+one-year integrations, with best values in the
+$1.96\times10^{-13}$--$2.77\times10^{-14}$ range for
+Ceres and Apophis, and $3.49\times10^{-14}$ for Phaethon.
+For Phaethon at equal accuracy
+($|\Delta E/E|\approx7.00315\times10^{-5}$),
+\AAS\ reaches the crossover at $\varepsilon=10^{-3}$ with
+$7.0644\times10^4$ function evaluations versus
+$2.922\times10^4$ for fixed-step \saba\
+(a factor $2.42$ more evaluations).
+The integrator is implemented in the open-source \astdyn\ library,
+available at \url{https://github.com/ITALOccult/AstDyn}.

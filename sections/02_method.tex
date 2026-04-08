@@ -1,0 +1,140 @@
+%% sections/02_method.tex
+
+\section{The \AAS\ Integrator}
+\label{sec:method}
+
+\subsection{Hamiltonian Framework}
+\label{sec:hamiltonian}
+
+We consider the heliocentric Hamiltonian for a test particle,
+\begin{equation}
+  H(\vq, \vp) = \frac{|\vp|^2}{2}
+    - \frac{\mu}{|\vq|}
+    + V_{J_2}(\vq)
+    + V_{\mathrm{pert}}(\vq, t),
+  \label{eq:hamiltonian}
+\end{equation}
+where $\vq \in \mathbb{R}^3$ is the heliocentric position in AU,
+$\vp$ is the conjugate momentum in \unitAUd,
+$\mu = k^2 = \mathrm{GMS} = 2.9591\times10^{-4}$\,AU$^3$\,day$^{-2}$
+is the Gaussian gravitational constant squared \citep{constants_iau2015},
+and $V_{J_2}$ is the solar oblateness correction with
+$J_2 = 2.2\times10^{-7}$ \citep{constants_iau2015}.
+For the two-body benchmarks in Section~\ref{sec:benchmark},
+$V_{J_2} = V_{\mathrm{pert}} = 0$.
+
+\subsection{Yoshida Fourth-Order Composition}
+\label{sec:yoshida}
+
+The base map is the Yoshida fourth-order composition
+\citep{Yoshida1990} of the leapfrog (Störmer--Verlet) map.
+The coefficients are
+\begin{equation}
+  w_1 = \frac{1}{2 - 2^{1/3}}, \qquad
+  w_0 = 1 - 2w_1,
+  \label{eq:yoshida_coeffs}
+\end{equation}
+with $w_1 \approx 1.3512$ and $w_0 \approx -1.7024$.
+The composition is the symmetric Drift-Kick-Drift (DKD) sequence,
+\begin{equation}
+  \Phi_{\Delta s} =
+    \begin{aligned}[t]
+      &\mathcal{D}(c_1\Delta s)\,
+      \mathcal{K}(d_1\Delta s)\,
+      \mathcal{D}(c_2\Delta s)\,
+      \mathcal{K}(d_2\Delta s)\\
+      &\times\,\mathcal{D}(c_2\Delta s)\,
+      \mathcal{K}(d_1\Delta s)\,
+      \mathcal{D}(c_1\Delta s),
+    \end{aligned}
+  \label{eq:dkd}
+\end{equation}
+where $c_1 = w_1/2$, $c_2 = (w_1+w_0)/2$, $d_1 = w_1$,
+$d_2 = w_0$. The Drift operator $\mathcal{D}(h)$ advances
+$\vq \leftarrow \vq + \vp\,h$; the Kick operator $\mathcal{K}(h)$
+advances $\vp \leftarrow \vp + \mathbf{f}(\vq)\,h$, where
+$\mathbf{f} = -\nabla\Phi$ is the gravitational force.
+
+\subsection{Hessian-Based Step Size Function}
+\label{sec:stepsize}
+
+The Sundman time transformation $dt = g(\vq)\,ds$ maps physical
+time $t$ to a pseudo-time $s$, in which the step $\Delta s$ is
+fixed while the physical step varies as
+\begin{equation}
+  \Delta t = g(\vq)\,\Delta s.
+  \label{eq:sundman}
+\end{equation}
+
+We define the step function as
+\begin{equation}
+  g(\vq) = \frac{\eps}{\sqrt{\rhoH}},
+  \label{eq:g_function}
+\end{equation}
+where $\eps$ is a dimensionless precision parameter and
+$\rhoH \equiv \rho\!\left(\Hess(\vq)\right)$
+is the spectral radius of the gravitational potential Hessian
+$\Hess = \nabla^2\Phi$.
+
+\subsubsection{Keplerian scaling}
+\label{sec:keplerian_scaling}
+
+For the point-mass potential $\Phi = -\mu/r$, the Hessian has
+eigenvalues $\{-\mu/r^3,\,-\mu/r^3,\,2\mu/r^3\}$ and
+$\rhoH = 2\mu/r^3$. Equation~(\ref{eq:g_function}) then gives
+\begin{equation}
+  \Delta t = \frac{\eps}{\sqrt{2\mu}}\,r^{3/2}.
+  \label{eq:dt_keplerian}
+\end{equation}
+The $r^{3/2}$ scaling is identical to the optimal adaptive step
+derived by \citet{PretoTremaine1999} from a time-transformation
+analysis. For a Keplerian orbit the local period scales as
+$T_{\mathrm{loc}} \propto r^{3/2}$, so \AAS\ maintains a roughly
+constant fraction of the local period per step throughout the orbit.
+
+\subsubsection{J2 correction to the Hessian}
+\label{sec:j2_hessian}
+
+When the $J_2$ term is included, the Hessian is augmented as
+$\Hess = \Hess_{\mathrm{pm}} + \Hess_{J_2}$, where the
+components of $\Hess_{J_2}$ are computed analytically:
+\begin{align}
+  H_{J_2,ij} &= C\Biggl[
+      \left(\frac{15z^2}{r^7} - \frac{3}{r^5}\right)\delta_{ij}
+      \notag \\
+    &\qquad + q_i\left(\frac{30z\,\delta_{jz}}{r^7}
+      - \frac{105z^2\,q_j}{r^9} + \frac{15q_j}{r^7}\right)
+      \notag \\
+    &\qquad - 6\delta_{iz}\left(\frac{\delta_{jz}}{r^5}
+      - \frac{5z\,q_j}{r^7}\right)
+    \Biggr],
+  \label{eq:j2_hessian}
+\end{align}
+with $C = \tfrac{1}{2}\mu J_2 R_\odot^2$ and $z = q_3$.
+
+\subsection{Time-Reversibility via Harmonic-Mean Symmetrization}
+\label{sec:symmetrization}
+
+To preserve discrete time-reversibility \citep{PretoTremaine1999,
+HairerLubichWanner2006}, the step function is symmetrized using
+the harmonic mean of $g$ evaluated at the current position
+$\vq$ and a predicted position $\vq^* = \vq + \vp\,g(\vq)$:
+\begin{equation}
+  g_{\mathrm{avg}} =
+    \frac{2\,g(\vq)\,g(\vq^*)}{g(\vq) + g(\vq^*)}.
+  \label{eq:harmonic_mean}
+\end{equation}
+One can verify
+\begin{equation}
+  g_{\mathrm{avg}}(\vq,\vp) = g_{\mathrm{avg}}(\vq^*,-\vp),
+\end{equation}
+which is the necessary condition
+for time-reversal invariance of the discrete map
+\citep[\S\,VIII.6]{HairerLubichWanner2006}.
+
+Additional physical bounds are enforced:
+(i)~$\Delta t \leq T_{\mathrm{local}}/20$ to avoid step-size
+resonances \citep{HernandezZeebeHadden2022}, and
+(ii)~$\Delta t \leq 1\,\mathrm{min}$ for $r < 2\,R_\odot$
+as a perihelion safeguard.
+

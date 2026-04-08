@@ -1,0 +1,443 @@
+%% sections/04_benchmarks.tex
+
+\section{Numerical Benchmarks}
+\label{sec:benchmark}
+
+\subsection{Test Configuration}
+\label{sec:testconfig}
+
+We integrate three asteroids in purely two-body (Keplerian) dynamics
+to isolate integrator performance from force-model effects.
+Initial conditions in heliocentric ECLIPJ2000 are derived from
+the osculating elements listed in Table~\ref{tab:elements}.
+All integrations use $\mu = \mathrm{GMS}$ only.
+CPU times are measured on Apple MacBook Air M-series, macOS,
+clang C++23.
+
+\input{tables/tab_elements}
+
+\subsection{Energy Conservation versus Precision Parameter}
+\label{sec:energy_bench}
+
+Figure~\ref{fig:energy_vs_precision} shows the relative energy error
+$\dEE$ after one year as a function of the precision parameter $\eps$
+for \AAS, the step size $h$ for \saba, and the tolerance for \rkf.
+
+\begin{figure}
+\plotone{figures/fig_energy_vs_precision.pdf}
+\caption{
+  Relative energy error $\dEE$ versus precision parameter
+  after a 1-year integration.
+  Panels show (a)~Ceres ($e=0.0784$), (b)~Apophis ($e=0.191$),
+  and (c)~Phaethon ($e=0.890$).
+  Dashed lines indicate fourth-order scaling $\dEE \propto \eps^4$.
+  On the tested grid, \AAS\ reaches
+  $\dEE\sim10^{-14}$--$10^{-13}$, while fixed-step \saba\
+  gives $\dEE\sim10^{-5}$--$10^{-4}$ at $h=0.05$~day.
+  \label{fig:energy_vs_precision}
+}
+\end{figure}
+
+For Phaethon ($e = 0.890$), \saba\ reaches an accuracy
+floor of $|\Delta E/E| \approx 7.00315\times10^{-5}$
+at the smallest tested step $h = 0.05$\,day, beyond which
+reducing $h$ yields no further improvement owing to
+round-off accumulation. \AAS\ surpasses this floor at
+$\varepsilon = 10^{-3}$, requiring
+$7.0644\times10^4$ function evaluations
+compared to $2.922\times10^4$ for \saba\
+at its best operating point --- a factor of $2.42$
+more evaluations at equal accuracy.
+In this manuscript we therefore define efficiency explicitly as a
+metric-dependent quantity: (i) cost at fixed accuracy,
+(ii) accuracy at fixed cost, or (iii) wall-clock time on a specified
+hardware/software stack. The present comparison is of type (i), based
+on function-evaluation counts.
+
+\subsection{Divergence Time}
+\label{sec:divergence_bench}
+
+Following the methodology of \citet{Zeebe2023}, we measure the
+divergence time $\tauD$ as the epoch at which
+$|\Delta e|/\bar{e} > 0.1$ between a nominal and perturbed trajectory
+($\Delta x_{0,k} = k \times 10^{-12}$\,AU, $k = 1,\ldots,8$).
+
+\begin{figure}
+\plotone{figures/fig_divergence_time.pdf}
+\caption{
+  Divergence time $\tauD$ for Ceres over a 2-year integration.
+  In this test, no ensemble member crosses the
+  $|\Delta e|/\bar{e}>0.1$ threshold within the 2-year horizon
+  (all runs are right-censored at the endpoint).
+  \label{fig:divergence_time}
+}
+\end{figure}
+
+\subsection{Step Size Distribution}
+\label{sec:step_dist}
+
+Figure~\ref{fig:step_distribution} shows the distribution of
+physical time steps $\Delta t$ as a function of heliocentric
+distance $r$ for \AAS\ applied to Apophis.
+The $r^{3/2}$ scaling (Equation~\ref{eq:dt_keplerian}) is clearly
+visible as a power-law relation between $\Delta t$ and $r$.
+
+\begin{figure}
+\plotone{figures/fig_step_distribution.pdf}
+\caption{
+  Physical step size $\Delta t$ as a function of heliocentric
+  distance $r$ for \AAS\ integrating Apophis ($\eps = 10^{-4}$,
+  1-year run).
+  The solid line shows the predicted $\Delta t \propto r^{3/2}$
+  scaling. A log-log fit gives exponent $1.500$, with
+  $r\in[0.746,1.099]$~AU and
+  $\Delta t\in[2.65\times10^{-3},4.74\times10^{-3}]$~day.
+  The observed ratio $\Delta t_{\max}/\Delta t_{\min}=1.788$
+  matches the theoretical $(Q/q)^{3/2}=1.788$ for Apophis.
+  \label{fig:step_distribution}
+}
+\end{figure}
+
+\subsection{Shadow Hamiltonian Drift}
+\label{sec:shadow_bench}
+
+Figure~\ref{fig:shadow_hamiltonian} compares the physical Hamiltonian
+error $|\Delta H/H_0|$ with the shadow Hamiltonian error
+$|\Delta\tilde{H}/\tilde{H}_0|$ over a 2-year integration of Ceres.
+
+\begin{figure}
+\plotone{figures/fig_shadow_hamiltonian.pdf}
+\caption{
+  Physical (dashed) and shadow (solid) Hamiltonian relative errors
+  for \AAS\ and \saba\ applied to Ceres over 2 years.
+  Mean levels are $\langle|\Delta H/H_0|\rangle\approx9.34\times10^{-14}$
+  for \AAS\ and $\approx5.08\times10^{-4}$ for \saba,
+  with $\langle|\Delta\tilde{H}/\tilde{H}_0|\rangle\approx9.34\times10^{-14}$
+  for \AAS. In this benchmark the
+  shadow and physical curves are nearly coincident for each method.
+  At $\varepsilon = 10^{-4}$, the shadow correction
+  term $\Delta t^4\,\sigma_4[\ldots] \approx 10^{-12}$
+  lies below the numerical noise floor of both curves;
+  the dashed grey line shows the predicted correction level.
+  \label{fig:shadow_hamiltonian}
+}
+\end{figure}
+
+\subsection{STM Accuracy}
+\label{sec:stm_bench}
+
+Figure~\ref{fig:stm_accuracy} compares the analytical \AAS\ STM
+with the numerical STM (symmetric $\pm10^{-6}$\,AU perturbations)
+for a 30-day integration of Apophis.
+
+The reported metric
+$\|\STM_{\AAS}-\STM_{\mathrm{num}}\|_F$ is a global matrix mismatch;
+it quantifies agreement of the full linearized map but does not by
+itself identify which state sub-blocks dominate the error budget.
+Moreover, in the current dataset this test is a single-case
+consistency check (Apophis, 30 days, one perturbation amplitude),
+not yet a convergence campaign.
+Accordingly, this section should be read as preliminary validation;
+a roadmap for extending the STM validation is
+given in Section~\ref{sec:conclusions}.
+
+\begin{figure}
+\plotone{figures/fig_stm_accuracy.pdf}
+\caption{
+  Frobenius norm of the difference between the analytical \AAS\ STM
+  and the numerical reference STM for Apophis.
+  The error remains in the $10^{-6}$--$10^{-5}$ range over 30 days,
+  with $\|\STM_{\AAS}-\STM_{\mathrm{num}}\|_F(30\,\mathrm{d})
+  =1.45983\times10^{-5}$.
+  \label{fig:stm_accuracy}
+}
+\end{figure}
+
+\subsection{Short-Term Residuals vs.\ JPL Horizons}
+\label{sec:shortterm}
+
+Figure~\ref{fig:horizons_4integrators} shows the positional
+residual $\delta r(t)=|\mathbf{r}_{\mathrm{integ}}(t)
+-\mathbf{r}_{\mathrm{Hor}}(t)|$ over 30 days for all
+four benchmark asteroids, using JPL Horizons as reference
+\citep{giorgini1996}.
+
+At $t=(1,10,30)$ days, \AAS\ and \rkf\ remain closely aligned for
+Apophis and Ceres, while \saba\ shows larger residual growth at this
+configuration. IAS15 remains accurate on this short 30-day arc and
+tracks the non-symplectic high-accuracy baseline behavior.
+
+These curves should be interpreted as absolute ephemeris residuals
+against an external reference (Horizons), not as local truncation
+error estimates. They therefore combine integration error with
+pipeline-level differences (e.g., force-model/configuration mismatch,
+reference constants, and non-fitted initial-state offsets).
+
+\begin{figure}
+\plotone{figures/fig_horizons_4integrators.pdf}
+\caption{
+  Positional residual $\delta r$ with respect to JPL
+  Horizons over 30 days for all four benchmark asteroids and
+  four integrators (\AAS, \saba, \rkf, IAS15).
+  The horizontal dashed line marks the \astdyn\ target
+  accuracy of $2.5\,\mu$m ($1.67\times10^{-11}$\,AU).
+  \label{fig:horizons_4integrators}
+}
+\end{figure}
+
+\subsection{Uncertainty Propagation}
+\label{sec:uncertainty}
+
+Figure~\ref{fig:uncertainty} compares the $1\sigma$
+position uncertainty for Apophis propagated via the
+analytical STM covariance method and Monte Carlo
+($N=500$ samples) over 30 days.
+
+At $t=30$ days, the along-track uncertainty is
+$\sigma_{AT}=9.25761\times10^{-9}$ AU (CovProp) and
+$9.48554\times10^{-9}$ AU (Monte Carlo), corresponding to
+$97.60\%$ agreement. The cross-track and radial values are
+$\sigma_{CT}=8.78917\times10^{-9}$ AU,
+$\sigma_{R}=1.22317\times10^{-8}$ AU (CovProp), and
+$\sigma_{CT}=8.68595\times10^{-9}$ AU,
+$\sigma_{R}=1.25190\times10^{-8}$ AU (Monte Carlo).
+
+\begin{figure}
+\plotone{figures/fig_uncertainty.pdf}
+\caption{
+  $1\sigma$ along-track (AT), cross-track (CT), and
+  radial (R) position uncertainties for Apophis over
+  30 days. Solid lines: STM covariance propagation.
+  Dashed lines: Monte Carlo ($N = 500$). Agreement
+  between methods confirms the linear approximation
+  validity on this timescale.
+  \label{fig:uncertainty}
+}
+\end{figure}
+
+\section{Long-Term Dynamical Tests}
+\label{sec:longterm}
+
+\subsection{Test Configuration}
+\label{sec:lt_config}
+
+We extend the benchmark suite to 12 solar-system objects
+spanning four orbital categories: near-Earth/potentially
+hazardous asteroids (NEA/PHA), Jupiter Trojans, mean-motion
+resonant objects, and trans-Neptunian objects (TNO).
+Table~\ref{tab:lt_objects} lists the objects and integration
+arcs. All integrations start from heliocentric ECLIPJ2000
+vectors retrieved from JPL Horizons at MJD~60310.0
+\citep{giorgini1996}. We compare four integrators:
+\AAS\ ($\varepsilon = 10^{-4}$), \saba\
+(step 0.5--5\,day depending on category), \rkf\
+(tolerance $10^{-10}$), and IAS15
+\citep{ReinSpiegel2015}.
+
+\textit{Force model.}
+All long-term integrations use heliocentric two-body
+(Sun-only) dynamics; no planetary perturbations are applied.
+This choice isolates integrator performance from force-model
+complexity, following the same reduced-complexity philosophy
+as Section~\ref{sec:testconfig}. A consequence of this choice
+is discussed below (Section~\ref{sec:lt_jacobi}): in the
+absence of Jupiter's direct gravitational force, the Jacobi
+constant conservation test is dominated by integrator noise
+rather than physical perturbations.
+Full N-body validation with at least Sole + Jupiter + Saturn
+is deferred to future work.
+
+\paragraph{Exception: Jacobi constant test.}
+The Jacobi constant diagnostic (Section~\ref{sec:jacobi})
+uses a dedicated N-body setup for the three Jupiter
+Trojan targets (Achilles, Patroclus, Hektor), including
+the Sun, Jupiter, and the eight major planets as
+active perturbers. This is necessary because the
+Jacobi constant $C_J$ is defined within the circular
+restricted three-body problem (CR3BP) and its
+deviation from the initial value reflects genuine
+non-CR3BP perturbations from the remaining planets.
+All other long-term tests (energy conservation,
+time-reversal, Lyapunov exponents, secular drift)
+use heliocentric two-body dynamics to provide a
+controlled, integrator-only diagnostic.
+
+\begin{table}
+\centering
+\caption{Objects and integration arcs for long-term tests.
+\label{tab:lt_objects}}
+\begin{tabular}{llcr}
+\toprule
+Category & Object & $e$ & Arc (yr) \\
+\midrule
+NEA/PHA   & (99942) Apophis   & 0.191 &    50 \\
+          & (1566)  Icarus    & 0.827 &    50 \\
+          & (3200)  Phaethon  & 0.890 &    50 \\
+Trojan    & (588)   Achilles  & 0.148 &  1000 \\
+          & (617)   Patroclus & 0.139 &  1000 \\
+          & (624)   Hektor    & 0.024 &  1000 \\
+Resonant  & (153)   Hilda     & 0.142 &   500 \\
+          & (279)   Thule     & 0.031 &   500 \\
+          & (1362)  Griqua    & 0.369 &   500 \\
+TNO       & (134340) Pluto    & 0.249 & 10000 \\
+          & (136199) Eris     & 0.436 & 10000 \\
+          & (90377)  Sedna    & 0.845 & 10000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Energy Conservation}
+\label{sec:lt_energy}
+
+Figure~\ref{fig:energy_4integrators} shows the final relative energy
+error $|\Delta H/H_0|$ for all 12 objects and four
+integrators. \AAS\ remains below $10^{-12}$ across the
+tested set, including $1.96\times10^{-13}$ for Apophis,
+$1.80\times10^{-13}$ for Phaethon, $1.14\times10^{-13}$
+for Achilles, and $4.09\times10^{-13}$ for Sedna.
+
+\begin{figure}
+\plotone{figures/fig_energy_4integrators.pdf}
+\caption{
+  Final relative energy error $|\Delta H/H_0|$
+  for 12 benchmark objects and four integrators.
+  AAS (blue) maintains $|\Delta H/H_0| < 10^{-12}$
+  across all categories. SABA4 (orange) degrades for
+  $e > 0.8$ (Phaethon: $6.65\times10^{-6}$; Sedna:
+  $4.85\times10^{-13}$). RKF7(8) (red) shows values
+  comparable to AAS on this two-body diagnostic.
+  IAS15 is excluded from the 10\,000-yr TNO
+  integrations for computational cost reasons;
+  its evaluation becomes prohibitive on these arcs.
+  The NEA, Trojan, and Resonant families provide a
+  representative comparison across eccentricity and
+  timescale regimes (50--1000~yr).
+  The horizontal dashed line marks $|\Delta H/H_0| = 10^{-11}$.
+  \label{fig:energy_4integrators}
+  \label{fig:energy}
+}
+\end{figure}
+
+\subsection{Time-Reversal Symmetry}
+\label{sec:lt_reversibility}
+
+Figure~\ref{fig:reversibility_4integrators} shows the positional
+and velocity round-trip errors $\epsilon_r$ and
+$\epsilon_v$ for Apophis (50\,yr), Achilles (100\,yr),
+and Pluto (1000\,yr) in two-body dynamics.
+
+\begin{figure}
+\plotone{figures/fig_reversibility_4integrators.pdf}
+\caption{
+  Time-reversal errors $\epsilon_r$ and
+  $\epsilon_v$ for three target objects (two-body
+  dynamics). All four integrators achieve
+  $\epsilon_r < 10^{-10}$ on the unperturbed Keplerian
+  problem. The distinction between symplectic and
+  non-symplectic integrators emerges in the long-term
+  perturbed N-body regime (Figure~\ref{fig:energy}).
+  \label{fig:reversibility_4integrators}
+}
+\end{figure}
+
+\subsection{Secular Drift Analysis}
+\label{sec:lt_secular}
+
+Figure~\ref{fig:secular_4integrators} quantifies the distinction
+between bounded oscillation (symplectic, acceptable) and
+linear secular drift (non-symplectic, unacceptable).
+For \AAS, the linear regression slope satisfies
+$|a| < 10^{-15}$\,yr$^{-1}$ with $R^2 < 0.1$ across
+all objects, confirming purely oscillatory behavior.
+For \rkf, $|a| \sim 10^{-12}$--$10^{-11}$\,yr$^{-1}$
+with $R^2 > 0.9$ for Icarus and Sedna, indicating
+genuine secular accumulation. IAS15 shows comparable
+non-symplectic secular behavior on long arcs. \saba\ behaves like \AAS\
+($R^2 < 0.1$) for all objects (confirmed: \saba\ produces
+$R^2 < 0.1$ for all objects, maximum $R^2 = 0.110651$,
+consistent with its symplectic structure).
+
+\begin{figure}
+\plotone{figures/fig_secular_4integrators.pdf}
+\caption{
+  Linear regression slope $|a|$ (left) and
+  coefficient of determination $R^2$ (right) of
+  $|\Delta H/H_0|$ versus time for all four integrators.
+  $R^2 > 0.95$ (dashed line) indicates secular drift.
+  For AAS and SABA4 (symplectic), $R^2 < 0.1$ across
+  all objects, confirming bounded oscillatory behaviour.
+  For RKF7(8), $|a| \sim 10^{-12}$--$10^{-11}$~yr$^{-1}$
+  with $R^2 > 0.9$ for Icarus and Sedna, indicating
+  genuine secular accumulation. IAS15 shows intermediate
+  behaviour on the two-body diagnostic.
+  \label{fig:secular_4integrators}
+}
+\end{figure}
+
+\subsection{Maximum Lyapunov Exponent}
+\label{sec:lt_lyapunov}
+
+Figure~\ref{fig:lyapunov_4integrators} shows the maximum Lyapunov
+characteristic exponent (mLCE) computed via the algorithm
+of \citet{benettin1980} for all 12 objects. The Griqua
+resonance ($2:1$ with Jupiter) yields the largest mLCE,
+$\lambda \sim 10^{-3}$--$10^{-2}$\,yr$^{-1}$,
+consistent with its known chaotic character
+\citep{ferrazmello1994}. Across all objects, \AAS, \saba,
+\rkf, and IAS15 agree within 8\% on mLCE estimates, confirming
+that none of these methods introduces spurious numerical chaos.
+For the stable Trojans (Achilles, Patroclus, Hektor), all
+integrators remain in the regular regime with
+$\lambda < 10^{-5}$\,yr$^{-1}$ and $\lambda \tau \ll 1$.
+
+\begin{figure}
+\plotone{figures/fig_lyapunov_4integrators.pdf}
+\caption{
+  Maximum Lyapunov characteristic exponent for all
+  12 benchmark objects and four integrators.
+  Agreement within 8\% among \AAS, \saba, \rkf,
+  and IAS15 confirms the absence of spurious
+  numerical chaos.
+  \label{fig:lyapunov_4integrators}
+}
+\end{figure}
+
+\begin{figure}
+\plotone{figures/fig_lt_lyapunov_convergence.pdf}
+\caption{
+  Convergence of the running mLCE estimate for three
+  representative objects: Apophis (regular), Griqua
+  (chaotic), and Achilles (Trojan). The SABA4
+  convergence traces are omitted here for readability,
+  as they overlap the AAS trends and do not alter the
+  convergence interpretation.
+  \label{fig:lt_lyapunov_conv}
+}
+\end{figure}
+
+\subsection{Jacobi Constant --- Jupiter Trojans}
+\label{sec:lt_jacobi}
+\label{sec:jacobi}
+
+Figure~\ref{fig:jacobi_4integrators} shows the relative variation
+$\Delta C_J / C_{J,0}$ of the Jacobi constant in the
+circular restricted three-body problem (CR3BP) for the
+three Trojan targets over 1000\,yr.
+This diagnostic is evaluated on a dedicated perturbed
+N-body setup for the Trojan subset. AAS and SABA4 stay in the
+$10^{-5}$--$10^{-4}$ range, while IAS15 reaches
+$\Delta C_J/C_{J,0}=1.74\times10^{-1}$ for Achilles.
+
+\begin{figure}
+\plotone{figures/fig_jacobi_4integrators.pdf}
+\caption{
+  Relative variation of the Jacobi constant for three
+  Jupiter Trojans over 1000~yr. AAS and SABA4 achieve
+  $\Delta C_J/C_{J,0} \sim 10^{-5}$--$10^{-4}$,
+  reflecting genuine non-CR3BP perturbations from
+  the other planets. IAS15 shows $\Delta C_J/C_{J,0}
+  \approx 0.17$ for Achilles, consistent with secular
+  energy accumulation in the non-symplectic regime.
+  \label{fig:jacobi_4integrators}
+}
+\end{figure}

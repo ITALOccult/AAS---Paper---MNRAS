@@ -1,0 +1,88 @@
+%% sections/03_stm.tex
+
+\section{Analytical State Transition Matrix}
+\label{sec:stm}
+
+\subsection{Definition and Variational Equations}
+\label{sec:stm_def}
+
+The State Transition Matrix $\STM(t, t_0) \in \mathbb{R}^{6\times6}$
+maps perturbations in the initial state to perturbations at time $t$:
+\begin{equation}
+  \delta\mathbf{x}(t) = \STM(t, t_0)\,\delta\mathbf{x}(t_0),
+  \qquad
+  \mathbf{x} = (\vq, \vp)^T.
+  \label{eq:stm_def}
+\end{equation}
+It satisfies the variational equation
+$\dot{\STM} = \mathbf{A}(t)\,\STM$,
+$\STM(t_0,t_0) = \mathbf{I}_6$, with
+\begin{equation}
+  \mathbf{A}(t) =
+  \begin{pmatrix}
+    \mathbf{0} & \mathbf{I}_3 \\[4pt]
+    \Hess(\vq(t)) & \mathbf{0}
+  \end{pmatrix}.
+  \label{eq:A_matrix}
+\end{equation}
+
+\subsection{Analytical Update within the DKD Sequence}
+\label{sec:stm_update}
+
+Partitioning $\STM$ into four $3\times 6$ blocks,
+$\STM = (\STM_{qq};\,\STM_{pq})^T$
+(where $\STM_{qq} = \partial\vq/\partial\mathbf{x}_0$ and
+$\STM_{pq} = \partial\vp/\partial\mathbf{x}_0$), each
+sub-step of the DKD sequence propagates $\STM$ analytically:
+
+\paragraph{Drift step $\mathcal{D}(h)$:}
+\begin{equation}
+  \STM_{qq} \leftarrow \STM_{qq} + h\,\STM_{pq}.
+  \label{eq:stm_drift}
+\end{equation}
+
+\paragraph{Kick step $\mathcal{K}(h)$:}
+\begin{equation}
+  \STM_{pq} \leftarrow \STM_{pq} + h\,\Hess(\vq)\,\STM_{qq}.
+  \label{eq:stm_kick}
+\end{equation}
+
+These updates are derived directly from the linearization of the
+Drift and Kick operators and involve the same $\Hess(\vq)$ already
+computed for the step-size estimate — no additional force evaluations
+are required.
+
+\subsection{Computational Advantage}
+\label{sec:stm_cost}
+
+The standard numerical STM approach requires 12 additional
+integrations (6 pairs of $\pm\delta$ perturbations in each
+phase-space direction). The \AAS\ analytical approach replaces
+these with two $3\times6$ matrix-vector products per sub-step
+(Equations~\ref{eq:stm_drift}--\ref{eq:stm_kick}), reducing the
+STM propagation cost from $O(12N_{\mathrm{steps}})$ to
+$O(N_{\mathrm{steps}})$ at negligible per-step overhead.
+
+The state vector is stored as a 42-element vector
+$\mathbf{y} \in \mathbb{R}^{42}$: the first 6 elements are
+$(\vq, \vp)$ and the remaining 36 are the flattened $\STM$ matrix.
+This allows the \AAS\ integrator to serve as a drop-in replacement
+for the standard numerical STM propagator in the \astdyn\
+orbit determination pipeline \citep{bigi_astdyn_library_2025}.
+
+\subsection{Validation Scope and Required Extensions}
+\label{sec:stm_validation_scope}
+
+The current manuscript validates the analytical STM primarily through
+the Frobenius-norm mismatch against a finite-difference reference over
+a 30-day Apophis arc (Section~\ref{sec:stm_bench}). This demonstrates
+internal consistency of the implemented variational update, but it is
+not yet a complete validation package for orbit-determination use.
+
+Three extensions are required for a full assessment:
+(i) a convergence study versus integration step/precision and
+finite-difference perturbation amplitude;
+(ii) direct comparison against numerical STM propagation strategies
+(central differences and variational-equation integration);
+and (iii) end-to-end impact on orbit determination (normal-matrix
+conditioning, covariance realism, and post-fit residual statistics).

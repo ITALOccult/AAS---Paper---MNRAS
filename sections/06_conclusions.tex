@@ -1,0 +1,71 @@
+%% sections/06_conclusions.tex
+
+\section{Conclusions}
+\label{sec:conclusions}
+
+We have presented \AAS\ (AstDyn-Adaptive Symplectic), a fourth-order
+adaptive geometric integrator for asteroid orbit propagation,
+with a symplectic fixed-step DKD kernel and an adaptive
+Sundman-type step-size strategy.
+The main contributions of this work are:
+
+\begin{enumerate}
+
+  \item \textit{Hessian-based step size function.}
+    The step $\Delta t = \eps / \sqrt{\rho(\Hess(\vq))}$
+    is physically motivated by local orbital curvature and is computed
+    analytically at negligible cost. The induced Keplerian
+    $r^{3/2}$ scaling is consistent with prior adaptive-symplectic
+    results; the added value here is the Hessian-based formulation and
+    its direct integration with analytical STM updates.
+
+  \item \textit{Time-reversibility.}
+    Harmonic-mean symmetrization of $g(\vq)$ ensures that the
+    discrete map satisfies the time-reversal invariance condition
+    of \citet{PretoTremaine1999}.
+
+  \item \textit{Analytical STM propagation.}
+    The State Transition Matrix is propagated via Hessian-based
+    updates within the Drift-Kick-Drift sequence, eliminating the
+    $12N_{\mathrm{steps}}$ overhead of numerical STM approaches.
+
+  \item \textit{Shadow Hamiltonian monitoring.}
+    The leading $O(\Delta t^4)$ correction to the shadow Hamiltonian
+    is computed analytically, providing a rigorous energy health check.
+
+  \item \textit{Numerical validation.}
+    Benchmarks on Ceres, Apophis, and Phaethon demonstrate
+    (i) one-year \AAS\ energy errors down to
+    $1.96\times10^{-13}$ (Apophis),
+    (ii) for Phaethon at equal accuracy
+    ($|\Delta E/E|\approx7.00315\times10^{-5}$),
+    $7.0644\times10^4$ (\AAS, $\varepsilon=10^{-3}$)
+    vs.
+    $2.922\times10^4$ (\saba) function evaluations
+    (a factor $2.42$ more for \AAS, i.e.
+    no global speedup claim in this equal-accuracy regime), and
+    (iii) analytical-vs-numerical STM agreement
+    $\|\STM_{\AAS}-\STM_{\mathrm{num}}\|_F(30\,\mathrm{d})
+    =1.45983\times10^{-5}$.
+
+\end{enumerate}
+
+\AAS\ is open-source and available as part of the \astdyn\
+library at \url{https://github.com/ITALOccult/AstDyn}.
+A companion paper (Bigi, in prep.) describes the
+full library pipeline from MPC observations to stellar occultation
+path predictions, validated against JPL Horizons with residuals
+$< 2.5\,\mu$m.
+
+For completeness, we note that the present benchmark campaign remains
+partly reduced-complexity; full operational validation will require
+systematic N-body tests (including Jupiter), strongly perturbed
+intervals, and close-encounter cases.
+For the STM contribution specifically, the current evidence is a
+single-case consistency test; a full validation still requires
+step-size convergence, numerical-STM cross-comparisons, and
+orbit-determination impact studies.
+Likewise, dedicated Kahan-ablation experiments and formal statistical
+uncertainty/sensitivity analyses remain necessary before elevating
+the present deterministic benchmark outcomes to fully statistical
+performance statements.

@@ -1,0 +1,30 @@
+%% tables/tab_elements.tex
+
+\begin{table*}
+\centering
+\caption{
+  Osculating elements (heliocentric ECLIPJ2000, epoch J2000.0)
+  of benchmark asteroids used in this work.
+  \label{tab:elements}
+}
+\begin{tabular}{lccccccc}
+\toprule
+Body & $a$ (AU) & $e$ & $i$ (deg) & $\Omega$ (deg) & $\omega$ (deg) & $M$ (deg) \\
+\midrule
+(1) Ceres        & 2.7665 & 0.0784 & 10.583 &  80.494 &  73.923 &   6.177 \\
+(99942) Apophis  & 0.9223 & 0.1914 &  3.331 & 204.657 & 126.065 & 232.181 \\
+(3200) Phaethon  & 1.2715 & 0.8902 & 22.129 & 265.510 & 321.894 & 142.572 \\
+(309704) Baruffetti & 3.0586 & 0.0503 & 10.629 &  52.331 &  26.303 & 265.870 \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\parbox{0.95\textwidth}{\footnotesize
+Source: JPL Horizons (retrieved 2025 March, epoch J2000.0).
+Orbital elements are computed from the heliocentric ICRF state vectors
+by rotating to ECLIPJ2000 (obliquity $\varepsilon=23.4393^\circ$).
+$\mu = \mathrm{GMS} = k^2 = 2.9591\times10^{-4}$\,AU$^3$\,day$^{-2}$.
+No planetary perturbations are applied in the two-body benchmarks
+(Section~\ref{sec:benchmark}).
+}
+\end{table*}

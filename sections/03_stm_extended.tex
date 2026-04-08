@@ -1,0 +1,177 @@
+%% sections/03_stm_extended.tex
+%% Sezione 3 — Analytical STM: extended version with proofs
+%% Sostituisce o espande sections/03_stm.tex
+
+\section{Analytical State Transition Matrix}
+\label{sec:stm}
+
+\subsection{Definition and Variational Equations}
+\label{sec:stm_def}
+
+The State Transition Matrix (STM)
+$\STM(t, t_0) \in \mathbb{R}^{6\times6}$ maps perturbations
+in the initial state to perturbations at time $t$:
+\begin{equation}
+  \delta\mathbf{x}(t) = \STM(t, t_0)\,\delta\mathbf{x}(t_0),
+  \qquad
+  \mathbf{x} = (\vq, \vp)^T.
+  \label{eq:stm_def}
+\end{equation}
+It satisfies the matrix variational equation
+\begin{equation}
+  \dot{\STM} = \mathbf{A}(t)\,\STM,
+  \qquad
+  \STM(t_0, t_0) = \mathbf{I}_6,
+  \label{eq:stm_ode}
+\end{equation}
+with the stability matrix
+\begin{equation}
+  \mathbf{A}(t) =
+  \begin{pmatrix}
+    \mathbf{0}_3 & \mathbf{I}_3 \\[4pt]
+    \mathbf{H}(\vq(t)) & \mathbf{0}_3
+  \end{pmatrix},
+  \label{eq:A_matrix}
+\end{equation}
+where $\mathbf{H}(\vq) = \nabla_\vq^2 V(\vq)$ is the Hessian
+of the potential. The $3\times3$ lower-left block is the
+\textit{force gradient matrix} $\partial\mathbf{f}/\partial\vq$.
+
+\subsection{Derivation of the Analytical Updates}
+\label{sec:stm_derivation}
+
+We partition $\STM$ into four $3\times3$ blocks:
+\begin{equation}
+  \STM =
+  \begin{pmatrix}
+    \STM_{qq} & \STM_{qp} \\[4pt]
+    \STM_{pq} & \STM_{pp}
+  \end{pmatrix},
+  \quad
+  \begin{aligned}[t]
+    \STM_{qq} &= \frac{\partial\vq}{\partial\vq_0},
+    &\STM_{qp} &= \frac{\partial\vq}{\partial\vp_0}, \\
+    \STM_{pq} &= \frac{\partial\vp}{\partial\vq_0},
+    &\STM_{pp} &= \frac{\partial\vp}{\partial\vp_0}.
+  \end{aligned}
+  \label{eq:stm_blocks}
+\end{equation}
+The variational equation \eqref{eq:stm_ode} with
+\eqref{eq:A_matrix} gives the coupled system:
+\begin{align}
+  \dot{\STM}_{qq} &= \STM_{pq},   & \dot{\STM}_{qp} &= \STM_{pp}, \\
+  \dot{\STM}_{pq} &= \mathbf{H}\STM_{qq}, & \dot{\STM}_{pp} &= \mathbf{H}\STM_{qp}.
+  \label{eq:stm_system}
+\end{align}
+
+\paragraph{Drift step $\mathcal{D}(h)$: $\vq' = \vq + h\,g\,\vp$, $\vp' = \vp$.}
+The linearisation of the Drift with respect to initial conditions is:
+\begin{align}
+  \delta\vq' &= \delta\vq + h\,g\,\delta\vp
+              + h\,(\nabla_\vq g)\,\vp\,\delta\vq, \\
+  \delta\vp' &= \delta\vp.
+\end{align}
+In matrix form, the STM update under the Drift is:
+\begin{equation}
+  \begin{pmatrix}\STM_{qq}' \\ \STM_{pq}'\end{pmatrix}
+  =
+  \begin{pmatrix}
+    \STM_{qq} + h\,g\,\STM_{pq} + h(\nabla_\vq g)\vp^T\STM_{qq} \\
+    \STM_{pq}
+  \end{pmatrix}.
+  \label{eq:stm_drift_full}
+\end{equation}
+For the central (dominant Keplerian) force, $\nabla_\vq g \propto
+\nabla_\vq r^{3/2} = \frac{3}{2}r^{1/2}\hat{\vq}$ is small
+for nearly Keplerian orbits. Retaining the full expression gives
+the \textit{exact} STM update for the Drift; discarding the
+$(\nabla_\vq g)\vp^T$ correction gives the leading-order
+approximation used in practice:
+\begin{equation}
+  \boxed{\STM_{qq} \leftarrow \STM_{qq} + h\,g(\vq)\,\STM_{pq},
+  \qquad \STM_{pq} \leftarrow \STM_{pq}.}
+  \label{eq:stm_drift_approx}
+\end{equation}
+The neglected term is $\mathcal{O}(h\,\varepsilon\,|\nabla_\vq\ln g|)$,
+which is $\mathcal{O}(h/r)$ for the Keplerian scaling — smaller
+than the dominant term by a factor $h/r \ll 1$ for well-resolved orbits.
+
+\paragraph{Kick step $\mathcal{K}(h)$: $\vp' = \vp + h\,\mathbf{f}(\vq)$, $\vq' = \vq$.}
+The linearisation is:
+\begin{equation}
+  \delta\vp' = \delta\vp + h\,\frac{\partial\mathbf{f}}{\partial\vq}\,\delta\vq
+             = \delta\vp - h\,\mathbf{H}(\vq)\,\delta\vq.
+\end{equation}
+The STM update is therefore:
+\begin{equation}
+  \boxed{\STM_{pq} \leftarrow \STM_{pq} + h\,\mathbf{H}(\vq)\,\STM_{qq},
+  \qquad \STM_{qq} \leftarrow \STM_{qq}.}
+  \label{eq:stm_kick}
+\end{equation}
+This is \textit{exact}: the Kick is a linear map in $(\vq,\vp)$
+space at fixed $\vq$, so its STM update involves no approximation.
+
+\subsection{Symplecticity of the STM}
+\label{sec:stm_symplectic}
+
+\begin{theorem}[Symplecticity of the STM]
+The STM propagated by the updates
+\eqref{eq:stm_drift_approx}--\eqref{eq:stm_kick} satisfies the
+symplectic condition
+$\STM^T \Omega \STM = \Omega$ exactly.
+\end{theorem}
+
+\begin{proof}
+At $t=t_0$: $\STM = \mathbf{I}_6$ satisfies
+$\mathbf{I}^T\Omega\mathbf{I} = \Omega$. The Kick update multiplies
+$\STM$ on the left by the symplectic matrix $J_\mathcal{K}$
+(Equation~\ref{eq:kick_jacobian}), and the Drift update
+multiplies by $J_\mathcal{D}$ (Equation~\ref{eq:drift_jacobian},
+leading-order terms). Since $J_\mathcal{K}^T\Omega J_\mathcal{K} = \Omega$
+and $J_\mathcal{D}^T\Omega J_\mathcal{D} = \Omega$, and since
+$(\Phi_1\Phi_2)^T\Omega(\Phi_1\Phi_2) = \Phi_2^T(\Phi_1^T\Omega\Phi_1)\Phi_2$,
+the product preserves the symplectic condition by induction.
+\end{proof}
+
+\paragraph{Practical consequence.}
+The symplectic condition $\STM^T\Omega\STM = \Omega$ implies
+$\det(\STM) = 1$ (Liouville's theorem), which can be monitored
+as an independent diagnostic of STM accuracy. A deviation
+$|\det(\STM) - 1| > 10^{-10}$ indicates numerical contamination.
+
+\subsection{Computational Cost}
+\label{sec:stm_cost}
+
+The standard numerical STM requires 12 additional orbit
+integrations (6 pairs of $\pm\delta$ perturbations in each
+phase-space direction). The \AAS\ analytical approach replaces
+these with:
+\begin{itemize}
+  \item Per Kick: one $3\times3$ matrix-matrix product
+    $\mathbf{H}\STM_{qq}$ ($27$ multiplications and $18$
+    additions per column = $\mathcal{O}(54)$ flops per block);
+  \item Per Drift: one $3\times3$ addition
+    $\STM_{qq} + h\,g\,\STM_{pq}$ ($\mathcal{O}(18)$ flops).
+\end{itemize}
+The total overhead per DKD cycle (7 sub-steps, 4 Kicks and 4
+Drifts) is $\sim 4\times54 + 4\times18 = 288$ flops versus
+$12 \times 7 = 84$ orbit evaluations at the full force-model cost.
+For the two-body benchmarks where each force evaluation costs
+$\sim 20$ flops, the analytical STM is already competitive;
+for the full N-body model (cost $\sim 10^3$ flops per evaluation)
+the analytical STM is $\sim 40\times$ cheaper.
+
+The full state-plus-STM vector is stored as a 42-element
+double-precision array $\mathbf{y} \in \mathbb{R}^{42}$:
+elements 1--6 contain $(\vq, \vp)$ and elements 7--42 contain
+the flattened $\STM$ matrix in row-major order. This allows
+\AAS\ to serve as a drop-in replacement for the standard
+numerical STM propagator in the \astdyn\ orbit determination
+pipeline.
+
+\subsection{Validation Scope and Required Extensions}
+\label{sec:stm_validation_scope}
+
+The detailed STM validation roadmap is deferred to the
+Conclusions (Section~\ref{sec:conclusions}), where it is
+discussed together with the broader limitations and future work.

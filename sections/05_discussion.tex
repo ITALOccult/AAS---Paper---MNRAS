@@ -1,0 +1,262 @@
+%% sections/05_discussion.tex
+
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Efficiency Gain for High-Eccentricity Orbits}
+\label{sec:efficiency}
+
+The $r^{3/2}$ step scaling (Equation~\ref{eq:dt_keplerian}) implies
+that \AAS\ concentrates computational effort at perihelion where
+orbital curvature is highest. For Phaethon with $e = 0.890$, the
+perihelion and aphelion distances are $q = 0.140$\,AU and
+$Q = 2.402$\,AU respectively, giving a step ratio
+$\Delta t_Q / \Delta t_q \approx (Q/q)^{3/2} \approx 117$.
+A fixed-step integrator must use the perihelion step everywhere,
+wasting a factor of $\sim 100$ function evaluations at aphelion.
+To avoid ambiguity, we distinguish three non-equivalent efficiency
+definitions: (a) cost at fixed accuracy, (b) accuracy at fixed cost,
+and (c) wall-clock time on a specified machine.
+In the present dataset we report (a) using function-evaluation counts.
+For Phaethon at $|\Delta E/E|\approx7.00315\times10^{-5}$,
+\AAS\ requires $7.0644\times10^4$ evaluations
+($\varepsilon=10^{-3}$) versus $2.922\times10^4$ for \saba,
+i.e.
+a factor $2.42$ higher cost at equal accuracy.
+Accordingly, this benchmark should not be interpreted as a global
+speedup claim for \AAS; rather, it quantifies a trade-off between
+geometric fidelity and computational cost in the tested regime.
+
+\subsection{Comparison with \orbitn\ and \rebound}
+\label{sec:comparison}
+
+\citet{Zeebe2023} showed that \orbitn\ achieves
+$|\Delta E/E| \sim 10^{-11}$--$10^{-12}$ for solar-system
+integrations over 100\,Myr with Kahan compensated summation.
+Our benchmark set confirms that \AAS\ remains in the
+$10^{-13}$ regime on long arcs (Apophis, 50\,yr:
+$1.96\times10^{-13}$), while fixed-step \saba\ degrades for
+high-eccentricity trajectories.
+
+The \saba\ family \citep{LaskarRobutel2001, Farres2013}
+provides excellent accuracy for nearly circular orbits at fixed step,
+and can improve by up to six orders of magnitude over standard WH
+\citep{ReinHernandezTamayo2019}. \AAS\ is not intended to supersede
+\saba\ for circular-orbit problems; its advantage emerges for
+high-eccentricity objects where adaptive stepping recovers efficiency.
+
+The 1PN corrections in \AAS\ follow \citet{SahaTremaine1994},
+consistent with \orbitn. A detailed validation of the full \astdyn\
+force model (N-body, 1PN, SRP, Yarkovsky) against JPL Horizons is
+reported in the companion paper (Bigi, in prep.).
+
+\paragraph{Comparison with IAS15.}
+We include a direct comparison with \textsc{ias15}
+\citep{ReinSpiegel2015}, the 15th-order Gauss--Radau
+integrator implemented in \textsc{rebound} \citep{ReinLiu2012}.
+\textsc{ias15} is the standard high-accuracy reference for
+single-body integrations; it is not symplectic and does not
+preserve a shadow Hamiltonian.
+
+For a meaningful comparison, we adopt a common diagnostic:
+the relative variation of the two-body Keplerian energy
+$|\Delta H_{\rm 2b}/H_{\rm 2b,0}|$, which measures the
+pure numerical error of each integrator on the unperturbed
+Keplerian problem. On a 50-year integration of Apophis,
+\textsc{ias15} achieves $|\Delta H/H_0| = 1.69\times10^{-16}$
+(near machine precision), compared with
+$1.96\times10^{-13}$ for AAS,
+$9.46\times10^{-8}$ for SABA4, and
+$6.74\times10^{-14}$ for \textsc{rkf7(8)}.
+These values reflect the characteristic behaviour of each
+class: \textsc{ias15} minimises local truncation error
+by construction; AAS preserves the shadow Hamiltonian
+through symplecticity; SABA4 accumulates fixed-step
+splitting error for high-eccentricity orbits; and
+\textsc{rkf7(8)} reaches near-machine accuracy on short
+arcs through adaptive tolerance control.
+
+The time-reversal test (two-body, 50~yr) gives
+$\epsilon_r = 4.22\times10^{-11}$ for AAS,
+$3.95\times10^{-12}$ for SABA4,
+$2.98\times10^{-11}$ for \textsc{rkf7(8)}, and
+$4.53\times10^{-13}$ for \textsc{ias15}.
+All four integrators achieve sub-$10^{-10}$ reversibility
+on the unperturbed Keplerian problem, confirming that
+the time-reversal diagnostic on the two-body system does
+not distinguish symplectic from non-symplectic integrators
+at this precision level. The distinction emerges in the
+long-term energy behaviour: AAS maintains
+$|\Delta H/H_0| < 10^{-12}$ across all 12 benchmark objects
+and all integration arcs (50--10\,000~yr), while non-symplectic
+integrators show secular accumulation in the perturbed
+N-body regime.
+
+The maximum Lyapunov exponent (mLCE) shows agreement
+within 8\% across all four integrators for Apophis
+($\lambda \approx 0.13$~yr$^{-1}$), confirming that
+none of the integrators introduces spurious numerical chaos.
+
+\subsection{Kahan Compensated Summation}
+\label{sec:kahan}
+
+Following \citet{Kahan1965} and \citet{Zeebe2023}, \AAS\ implements
+Kahan compensated summation in the force accumulation loop.
+A dedicated with/without-Kahan ablation is not included in the
+current benchmark CSV set; we therefore defer a quantitative
+isolation of Kahan's contribution to future work.
+Consequently, no performance or accuracy claim in this manuscript
+should be interpreted as being individually attributed to Kahan
+summation.
+
+\subsection{Statistical Robustness and Sensitivity}
+\label{sec:stats_sensitivity}
+
+The present benchmarks are deterministic trajectory comparisons and
+do not yet provide full statistical uncertainty quantification.
+In particular, confidence intervals, distributional robustness across
+initial-condition perturbation ensembles, and parameter-sensitivity
+maps (with respect to $\varepsilon$, force-model toggles, and
+finite-difference scales in STM validation) are not yet reported.
+These analyses are required to convert the current point estimates
+into statistically characterized performance claims.
+
+\subsection{Methodological Scope vs Software Scope}
+\label{sec:method_scope}
+
+The short-term benchmark suite (Section~\ref{sec:benchmark}) uses
+intentionally reduced-complexity two-body diagnostics: they isolate
+numerical behavior (energy drift, reversibility, STM consistency)
+under controlled conditions, but are not by themselves sufficient
+to establish operational reliability in strongly perturbed
+multi-body regimes. This choice enables clean mechanism-level
+validation; the limitations are discussed in
+Section~\ref{sec:limitations}.
+
+Because \astdyn\ is a full pipeline library, manuscript narrative can
+easily drift toward implementation details. In this paper, our intent
+is methodological: geometric properties of the integrator,
+error-behavior diagnostics, and reproducible benchmark definitions.
+Software-engineering and pipeline-deployment details are treated as
+supporting context and are delegated, where possible, to the
+companion library paper.
+
+\subsection{Application to Occultation Prediction}
+\label{sec:occultation}
+
+For short-arc occultation workflows, the 30-day Horizons residuals
+from \texttt{horizons\_short.csv} remain at
+$10^{-6}$--$10^{-4}$ AU scale in the present benchmark setup, e.g.
+for Apophis $\delta r(30\,\mathrm{d})=2.92913\times10^{-6}$ AU
+(\AAS), $2.25895\times10^{-4}$ AU (\saba), and
+$2.92913\times10^{-6}$ AU (\rkf).
+These are external-reference ephemeris offsets and should not be read
+as pure integrator local error; they also include modeling/setup
+differences relative to Horizons.
+For uncertainty propagation, the 30-day comparison in
+\texttt{uncertainty.csv} gives
+$\sigma_{AT}=9.25761\times10^{-9}$ AU (CovProp) and
+$9.48554\times10^{-9}$ AU (Monte Carlo), with
+$97.60\%$ agreement, supporting the validity of the STM-based
+linearized covariance model over this time window.
+
+\subsection{Long-Term Dynamical Fidelity}
+\label{sec:lt_discussion}
+
+The long-term test suite of Section~\ref{sec:longterm}
+establishes three properties that are essential for
+operational use of \AAS\ in occultation prediction pipelines.
+
+\textit{Absence of secular drift.} The linear regression
+analysis (Section~\ref{sec:lt_secular}) confirms that
+\AAS\ produces bounded, oscillatory energy errors rather
+than linear secular accumulation. This behavior is consistent
+with geometric integration in the symplectic-kernel framework
+\citep{HairerLubichWanner2006},
+ensures that propagation errors do not grow monotonically
+with arc length --- a critical requirement for multi-year
+orbital solutions.
+
+\textit{Absence of spurious chaos.} The agreement between
+\AAS\ and \rkf\ on the mLCE values
+(Section~\ref{sec:lt_lyapunov}) confirms that \AAS\ does
+not introduce numerical chaos beyond what is physically
+present in the orbit. The Griqua result is particularly
+informative: both integrators agree on $\lambda \sim
+10^{-3}$\,yr$^{-1}$, consistent with the known chaotic
+timescale of the $2:1$ resonance \citep{ferrazmello1994}.
+
+More generally, the methodological contribution of \AAS\ is
+best interpreted as a reformulation and integration of known
+adaptive-geometric principles (rather than a new adaptive
+scaling law): the novelty lies in the Hessian-spectral-radius
+formulation, its curvature-based interpretation, and its direct
+reuse for analytical STM propagation.
+
+\textit{Geometric conservation diagnostics.} The Jacobi constant
+test (Section~\ref{sec:lt_jacobi}) and the time-reversal
+test (Section~\ref{sec:lt_reversibility}) directly probe
+the geometric structure of the integration. \saba\ performs
+similarly to \AAS\ on these diagnostics, while \rkf\ shows the systematic
+irreversibility characteristic of adaptive Runge-Kutta
+methods.
+
+Importantly, these diagnostics should not be read as a standalone
+proof of symplecticity in physical time: as discussed in
+Section~\ref{sec:symplecticity_proof}, time-reversibility and bounded
+energy oscillations are necessary but not sufficient to claim
+strict symplecticity of the adaptive map.
+
+The practical implication for \astdyn\ users is that
+\AAS\ can be used with confidence for arcs up to
+50\,yr for NEA/PHA objects and up to
+1000\,yr for Trojans and 10000\,yr for TNOs, with energy errors
+remaining below $10^{-11}$ throughout.
+
+\subsection{Limitations and Future Work}
+\label{sec:limitations}
+
+The current \AAS\ implementation has the following limitations.
+
+\textit{Close encounters.} The Hessian metric becomes inaccurate
+when inter-body forces are comparable to the central-body force.
+A switching strategy such as that of \citet{HernandezDehnen2024}
+would be required for asteroid--planet flyby scenarios.
+
+\textit{N-body perturbations.} When planetary perturbations are
+active, $\rhoH$ accounts only for the central-body Hessian.
+Incorporating the full force Jacobian would improve the step estimate
+in strongly perturbed regions (e.g., Jupiter resonance crossings).
+
+\textit{Operational exploitation of the analytical STM.} The analytical
+STM machinery is implemented and internally validated, but its full
+practical leverage in orbit determination has not yet been exhausted
+in this manuscript (e.g., covariance realism tests, estimator
+conditioning studies, and residual-level comparisons against numerical
+STM pipelines).
+
+\textit{Benchmark representativeness.} A substantial fraction of the
+current validation isolates two-body dynamics to separate integrator
+effects from force-model complexity. While this is useful for
+mechanism-level diagnostics, it is not fully representative of
+operational ephemeris propagation. A dedicated benchmark extension is
+therefore required with full N-body dynamics (at minimum including
+Jupiter), strong-perturbation intervals (resonance crossings), and
+close-encounter scenarios where adaptive behavior is most stressed.
+
+\textit{SABA-type correctors.} \citet{LaskarRobutel2001} showed
+that symplectic correctors can improve accuracy by orders of
+magnitude at no integration cost. Combining \AAS\ with the SABAC
+corrector step is a natural extension.
+
+\textit{Clarify the symplectic nature of the method.} Because
+\AAS\ uses an adaptive step function, the exact mathematical
+scope of the symplectic claim should be stated more explicitly
+(e.g., conditions under which the map is strictly symplectic,
+approximately symplectic, or only time-reversible). If needed,
+the claim should be weakened in the manuscript wording to match
+the proven properties.
+
+Overall, the current status of the method can be summarized as
+technically solid and scientifically promising, but not yet fully
+mature in the sense of complete theory-to-operations validation.

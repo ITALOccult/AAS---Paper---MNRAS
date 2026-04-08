@@ -1,0 +1,145 @@
+%% sections/02e_hessian_step_function.tex
+%% Sezione 2.x — Choice of g(q): Hessian Metric and Physical Motivation
+%% Da inserire dopo l'esistente sezione 2.3 (Hessian-Based Step Size Function)
+%% come sottosezioni aggiuntive
+
+\subsubsection{Optimality of the Hessian Metric}
+\label{sec:optimality}
+
+The spectral radius $\rho(\mathbf{H}(\vq))$ provides a
+coordinate-invariant measure of the local curvature of the
+potential. We motivate its use as a step function through
+three complementary arguments.
+
+\paragraph{1. Orbital mechanics argument.}
+The characteristic frequency of the linearised orbit near
+$\vq$ is $\omega_{\max} = \sqrt{\rho(\mathbf{H})}$.
+The Nyquist condition for resolving this oscillation requires
+\begin{equation}
+  \Delta t \lesssim \frac{1}{\omega_{\max}}
+  = \frac{1}{\sqrt{\rho(\mathbf{H})}},
+\end{equation}
+which is precisely our step function \eqref{eq:g_function} with
+$\varepsilon \sim 1$. This argument shows that $g(\vq) =
+\varepsilon/\sqrt{\rho(\mathbf{H})}$ is the \textit{minimum}
+step consistent with resolving the local orbital dynamics.
+
+\paragraph{2. Geometric argument.}
+The Hessian defines a Riemannian metric on configuration space,
+$\langle\delta\vq, \mathbf{H}\delta\vq\rangle$. The eigenvalues
+of $\mathbf{H}$ are the principal curvatures of the potential
+surface. The largest eigenvalue $\rho(\mathbf{H})$ controls the
+fastest growing perturbation — adapting the step to its inverse
+ensures that the discrete trajectory deviates from the smooth
+Hamiltonian flow by a bounded amount at each step.
+
+\paragraph{3. Comparison with Preto-Tremaine.}
+\citet{PretoTremaine1999} derived the optimal step function for
+Keplerian motion from a time-transformation analysis:
+$g_{\rm PT} \propto r^{3/2}$.
+For our choice, $\rho(\mathbf{H}) = 2\mu/r^3$, so
+$g = \varepsilon/\sqrt{2\mu}\,r^{3/2} \propto r^{3/2}$:
+the Hessian metric recovers the Preto-Tremaine result as a
+special case, derived here from a purely geometric argument
+without any reference to the Sundman transformation.
+
+\subsubsection{Analytical Hessian for the Full Force Model}
+\label{sec:full_hessian}
+
+For the complete force model used in the long-term benchmarks
+(Section~\ref{sec:longterm}), the Hessian receives contributions
+from each force term.
+
+\paragraph{Keplerian term.}
+The Hessian of $V_{\rm Kep} = -\mu/r$ is:
+\begin{equation}
+  \mathbf{H}_{\rm Kep}^{ij}
+  = \frac{\mu}{r^3}\left(\frac{3q_iq_j}{r^2} - \delta_{ij}\right),
+  \label{eq:hessian_keplerian}
+\end{equation}
+with eigenvalues $\{-\mu/r^3,\,-\mu/r^3,\,2\mu/r^3\}$ and
+spectral radius $\rho(\mathbf{H}_{\rm Kep}) = 2\mu/r^3$.
+
+\paragraph{$J_2$ term.}
+Define
+\begin{equation}
+  V_{J_2} = -\frac{1}{2}\mu J_2 R_\odot^2
+  \frac{3\cos^2\theta - 1}{r^3},
+  \qquad \cos\theta = \frac{z}{r}.
+\end{equation}
+Its Hessian is:
+\begin{align}
+  A_j &= \frac{30z\,\delta_{jz}}{r^7}
+      - \frac{105z^2 q_j}{r^9}
+      + \frac{15q_j}{r^7}, \notag \\
+  B_j &= \frac{\delta_{jz}}{r^5} - \frac{5z\,q_j}{r^7}, \notag \\
+  \mathbf{H}_{J_2}^{ij}
+  &= C\left[\left(\frac{15z^2}{r^7} - \frac{3}{r^5}\right)\delta_{ij}
+     + q_i A_j - 6\delta_{iz}B_j\right],
+  \label{eq:hessian_j2}
+\end{align}
+where $C = \tfrac{1}{2}\mu J_2 R_\odot^2$ and $z = q_3$.
+
+\paragraph{N-body perturbations.}
+For the planetary perturbation from body $k$ at position
+$\vq_k$ with gravitational parameter $\mu_k$, define
+$\mathbf{u}_k = \vq-\vq_k$ and $r_k = |\mathbf{u}_k|$.
+\begin{equation}
+  \mathbf{H}_k^{ij}
+  = \mu_k\left(
+      \frac{3\,u_{k,i}u_{k,j}}{r_k^5}
+      - \frac{\delta_{ij}}{r_k^3}
+    \right),
+  \label{eq:hessian_nbody}
+\end{equation}
+The full Hessian $\mathbf{H} = \mathbf{H}_{\rm Kep}
++ \mathbf{H}_{J_2} + \sum_k \mathbf{H}_k$ is computed
+analytically at each force evaluation, adding negligible
+overhead to the existing force model.
+
+The spectral radius is estimated efficiently without full
+eigendecomposition via the Gershgorin circle theorem:
+\begin{equation}
+  \rho(\mathbf{H}) \leq \max_i
+  \left|H_{ii}\right| + \sum_{j\neq i} |H_{ij}|,
+  \label{eq:gershgorin}
+\end{equation}
+which provides an upper bound in $\mathcal{O}(9)$ operations.
+For the dominant Keplerian term the bound is tight;
+for perturbed orbits it overestimates $\rho$ by a factor
+of at most 3, giving a conservative (smaller) step size
+that ensures safety without compromising accuracy.
+
+\subsubsection{Step Bounds and Practical Implementation}
+\label{sec:step_bounds}
+
+Three physical bounds are enforced on the step size:
+
+\paragraph{Local period bound.}
+To avoid step-size resonances \citep{HernandezZeebeHadden2022}:
+\begin{equation}
+  \Delta t \leq \frac{T_{\rm local}}{N_{\rm min}},
+  \qquad
+  T_{\rm local} = 2\pi\sqrt{\frac{r^3}{\mu}},
+  \qquad
+  N_{\rm min} = 20.
+  \label{eq:period_bound}
+\end{equation}
+
+\paragraph{Perihelion bound.}
+For $r < 2R_\odot$:
+\begin{equation}
+  \Delta t \leq \Delta t_{\rm peri} = 1\,\mathrm{min},
+  \label{eq:perihelion_bound}
+\end{equation}
+to handle extreme configurations such as sun-grazing comets.
+
+\paragraph{Yoshida negative sub-step.}
+The Yoshida coefficients include $d_2 = w_0 < 0$, which
+generates a sub-step backward in pseudo-time. The physical
+step for this sub-step is $|\Delta t| = |w_0|\,g\,\Delta s$,
+which remains positive and bounded by the same constraints.
+The backward pseudo-time step does not imply backward
+integration of the equations of motion; it is an artefact of
+the composition scheme that cancels in the full DKD sequence
+\citep{Yoshida1990}.
