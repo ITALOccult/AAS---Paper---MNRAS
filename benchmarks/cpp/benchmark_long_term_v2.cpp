@@ -18,10 +18,51 @@
 #include <numeric>
 #include <filesystem>
 #include <memory>
+#include <sstream>
+#include <stdexcept>
 
 using namespace astdyn;
 using namespace astdyn::propagation;
 using namespace astdyn::constants;
+
+#ifndef AAS_PAPER_REPO_ROOT
+#define AAS_PAPER_REPO_ROOT ""
+#endif
+
+namespace {
+
+std::filesystem::path find_repository_root() {
+    const std::filesystem::path configured_root = AAS_PAPER_REPO_ROOT;
+    if (!configured_root.empty()) {
+        const auto data_dir = configured_root / "data" / "benchmark_results";
+        if (std::filesystem::exists(data_dir)) {
+            return configured_root;
+        }
+    }
+
+    std::filesystem::path current = std::filesystem::current_path();
+    while (!current.empty()) {
+        const auto data_dir = current / "data" / "benchmark_results";
+        if (std::filesystem::exists(data_dir)) {
+            return current;
+        }
+        if (current == current.root_path()) {
+            break;
+        }
+        current = current.parent_path();
+    }
+
+    throw std::runtime_error(
+        "Unable to locate repository root containing data/benchmark_results. "
+        "Set AAS_PAPER_REPO_ROOT at configure time or run from inside the repository."
+    );
+}
+
+std::filesystem::path benchmark_data_dir() {
+    return find_repository_root() / "data" / "benchmark_results";
+}
+
+} // namespace
 
 // --- Data Structures ---
 struct AsteroidSpec {
@@ -192,6 +233,7 @@ int main(int argc, char** argv) {
     }
 
     std::cout << "[LTv2] 9-Body Heliocentric Mutual Integration Benchmark" << std::endl;
+    const auto data_dir = benchmark_data_dir();
     
     // 1. Initial State Setup (Heliocentric)
     io::HorizonsClient hzn;
@@ -204,10 +246,13 @@ int main(int argc, char** argv) {
         }
     }
 
-    auto asteroids = load_bench_states_v2("../examples/benchmark_results/initial_states_mjd60310.csv");
-    bool exists = std::filesystem::exists("../examples/benchmark_results/long_term_tests.csv");
-    std::ofstream out("../examples/benchmark_results/long_term_tests.csv", std::ios::app);
-    if (!exists || std::filesystem::file_size("../examples/benchmark_results/long_term_tests.csv") == 0) {
+    const auto initial_states_path = data_dir / "initial_states_mjd60310.csv";
+    const auto long_term_results_path = data_dir / "long_term_tests.csv";
+    auto asteroids = load_bench_states_v2(initial_states_path.string());
+    std::filesystem::create_directories(data_dir);
+    bool exists = std::filesystem::exists(long_term_results_path);
+    std::ofstream out(long_term_results_path, std::ios::app);
+    if (!exists || std::filesystem::file_size(long_term_results_path) == 0) {
         out << "asteroid,integrator,test,T_yr,value,unit,note\n";
     }
     

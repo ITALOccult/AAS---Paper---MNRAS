@@ -9,7 +9,7 @@ stable. Symplectic integrators \citep{WisdomHolman1991, Yoshida1990}
 are the method of choice because they preserve the geometric structure
 of Hamiltonian flow, preventing secular energy drift over millions of
 orbital periods \citep{HairerLubichWanner2006}. However, standard
-symplectic integrators use a fixed time step, which is computationally
+adaptive integrators with symplectic kernel use a fixed time step, which is computationally
 inefficient for eccentric orbits: the step appropriate near perihelion
 is unnecessarily small near aphelion.
 
@@ -27,7 +27,7 @@ requirements: long-term energy conservation for the former,
 and short-term positional accuracy ($\lesssim 1$\,mas) for
 the latter.
 
-Adaptive time-step methods for symplectic integrators were pioneered
+Adaptive time-step methods for adaptive integrators with symplectic kernel were pioneered
 by \citet{PretoTremaine1999} and \citet{MikkolaTanikawa1999}, who
 showed that a Sundman-type reparametrization $dt = g(\mathbf{q})\,ds$
 can preserve symplecticity when $g$ depends only on position

@@ -6,6 +6,9 @@ geometric integrator for asteroid orbit propagation, built on a
 symplectic Yoshida Drift-Kick-Drift kernel and an adaptive
 Sundman-type step-size law based on the spectral radius of the local
 gravitational potential Hessian.
+The symplecticity property holds strictly for the fixed-step kernel 
+in pseudo-time; in physical time the map is time-reversible and 
+near-area-preserving through the shadow Hamiltonian mechanism.
 The step function
 \[
   \Delta t = \eps \,/\, \sqrt{\rho\!\left(\nabla^2\Phi(\mathbf{q})\right)}
