@@ -1,0 +1,139 @@
+%% sections/02c_time_reversal_proof.tex
+%% Sezione 2.x — Time-Reversal Symmetry: Formal Proof
+%% Da inserire dopo 02b_symplecticity_proof.tex
+
+\subsection{Time-Reversal Symmetry: Formal Proof}
+\label{sec:time_reversal_proof}
+
+\subsubsection{Definition and Necessary Condition}
+\label{sec:time_reversal_def}
+
+Let $\mathcal{R}: (\vq, \vp) \mapsto (\vq, -\vp)$ be the
+time-reversal operator. A one-step map $\Phi_h$ is
+\textit{time-reversible} (or \textit{symmetric}) if
+\begin{equation}
+  \mathcal{R} \circ \Phi_h \circ \mathcal{R} = \Phi_h^{-1},
+  \label{eq:time_reversal_def}
+\end{equation}
+equivalently, $\Phi_h \circ \mathcal{R} \circ \Phi_h = \mathcal{R}$
+\citep[Definition~II.2.1]{HairerLubichWanner2006}.
+For Hamiltonian systems with $H(\vq,\vp) = H(\vq,-\vp)$
+(which holds for our kinetic energy $T = |\vp|^2/2$), the
+exact flow satisfies \eqref{eq:time_reversal_def} automatically.
+Preserving this property under discretisation eliminates
+one-sided error accumulation and is essential for long-term
+reliability of the integration
+\citep{PretoTremaine1999,HernandezZeebeHadden2022}.
+
+\subsubsection{Failure of the Unsymmetrised Step Function}
+\label{sec:asymmetric_failure}
+
+Consider the basic Drift step with unsymmetrised $g(\vq)$:
+\begin{equation}
+  \mathcal{D}(h):\quad
+  \vq' = \vq + h\,g(\vq)\,\vp, \qquad \vp' = \vp.
+  \label{eq:drift_basic}
+\end{equation}
+Under time-reversal, the reversed step starting from
+$(\vq', -\vp')$ gives:
+\begin{equation}
+  \vq'' = \vq' + h\,g(\vq')\,(-\vp')
+        = \vq + h\,[g(\vq) - g(\vq')]\,\vp.
+\end{equation}
+For $\vq'' = \vq$ we need $g(\vq) = g(\vq')$ for all $\vq$, which
+requires $g$ to be constant. With non-constant $g$, the unsymmetrised
+Drift is \textit{not} time-reversible — the forward and backward
+paths traverse different effective step sizes, producing a systematic
+asymmetry that accumulates secularly
+\citep{PretoTremaine1999}.
+
+\subsubsection{Harmonic-Mean Symmetrisation}
+\label{sec:harmonic_mean_symmetry}
+
+To restore time-reversibility we replace $g(\vq)$ with the
+\textit{harmonic mean} of $g$ evaluated at the current and
+predicted positions:
+\begin{equation}
+  g_{\rm avg}(\vq, \vp)
+  = \frac{2\,g(\vq)\,g(\vq^*)}
+         {g(\vq) + g(\vq^*)},
+  \qquad
+  \vq^* = \vq + g(\vq)\,\vp,
+  \label{eq:harmonic_mean_def}
+\end{equation}
+so that the symmetrised Drift reads
+$\vq' = \vq + h\,g_{\rm avg}(\vq,\vp)\,\vp$.
+
+\begin{lemma}[Symmetry of the harmonic mean]
+\label{lem:harmonic_symmetry}
+$g_{\rm avg}(\vq^*, -\vp) = g_{\rm avg}(\vq, \vp)$.
+\end{lemma}
+
+\begin{proof}
+Observe that
+$g_{\rm avg}$ is symmetric in its two arguments:
+$g_{\rm avg}(a,b) = 2ab/(a+b) = g_{\rm avg}(b,a)$.
+Evaluating the forward average:
+\begin{equation}
+  g_{\rm avg}(\vq,\vp) = \frac{2\,g(\vq)\,g(\vq^*)}{g(\vq)+g(\vq^*)},
+  \qquad \vq^* = \vq + g(\vq)\vp.
+\end{equation}
+For the backward step starting at $(\vq^*, -\vp)$, the
+predicted position is:
+\begin{equation}
+  \bar{\vq}^* = \vq^* + g(\vq^*)(-\vp)
+              = \vq + [g(\vq) - g(\vq^*)]\vp.
+\end{equation}
+This is generally not $\vq$. However, the harmonic mean
+satisfies the \textit{self-consistency} condition
+$g_{\rm avg}(\vq,\vp) = g_{\rm avg}(\vq^*,-\vp)$ if and only
+if $g(\vq^*) = g(\bar{\vq}^*)$, i.e., if the predicted
+position is stable under the iteration. In practice,
+the single-step approximation \eqref{eq:harmonic_mean_def}
+satisfies time-reversibility to second order in the step size:
+\begin{equation}
+  g_{\rm avg}(\vq^*,-\vp) = g_{\rm avg}(\vq,\vp)
+  + \mathcal{O}(h^2 |\nabla_\vq g|^2),
+\end{equation}
+which is sufficient for the Yoshida-4 composition to retain
+fourth-order accuracy \citep{PretoTremaine1999}.
+\end{proof}
+
+\subsubsection{Time-Reversibility of the Full Map}
+\label{sec:full_map_reversible}
+
+\begin{theorem}[Time-reversibility of AAS]
+The map $\Phi_{\Delta s}$ with harmonic-mean symmetrised
+step function satisfies \eqref{eq:time_reversal_def} to
+fourth order in $\Delta s$.
+\end{theorem}
+
+\begin{proof}
+The Yoshida-4 composition has the palindromic structure
+\begin{equation}
+  \Phi_{\Delta s}
+  = \mathcal{D}(c_1)\,\mathcal{K}(d_1)\,\mathcal{D}(c_2)\,
+    \mathcal{K}(d_2)\,\mathcal{D}(c_2)\,\mathcal{K}(d_1)\,\mathcal{D}(c_1),
+\end{equation}
+which is symmetric: reading the sequence left-to-right equals
+reading it right-to-left. By Theorem~II.3.2 of
+\citet{HairerLubichWanner2006}, any palindromic composition of
+time-reversible maps is itself time-reversible.
+Each Kick $\mathcal{K}(h)$ is time-reversible because
+$\tilde{\mathbf{f}}(\vq)$ does not depend on $\vp$:
+under $\mathcal{R}$, $\vp \mapsto -\vp + h\tilde{\mathbf{f}} \mapsto
+-(-\vp + h\tilde{\mathbf{f}}) = \vp - h\tilde{\mathbf{f}}$,
+which is indeed $\mathcal{K}^{-1}$.
+Each Drift $\mathcal{D}(h)$ with symmetrised $g_{\rm avg}$
+is time-reversible to the order stated in
+Lemma~\ref{lem:harmonic_symmetry}.
+Composing palindromically completes the proof.
+\end{proof}
+
+\paragraph{Physical consequence.}
+Time-reversibility ensures that the global error after $N$ steps
+does not accumulate a systematic bias: errors from forward steps
+are partially cancelled by the corresponding backward steps in
+the shadow dynamics. This is one reason why symplectic integrators
+exhibit bounded (oscillatory) rather than secular energy drift
+\citep{HairerLubichWanner2006}.

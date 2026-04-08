@@ -1,0 +1,44 @@
+%% sections/macros.tex
+%% Macro condivise — usa \providecommand per evitare conflitti con aastex
+%% NON inserire \begin o \end qui
+
+%% ---- Integratori e librerie ----------------------------------------
+%% NOTA: \aas è già definita da aastex come abbreviazione di giornale.
+%%       Usiamo \AAS per il nostro integratore.
+\newcommand{\AAS}{\textsc{AAS}}           % il nostro integratore
+\newcommand{\astdyn}{\texttt{AstDyn}}
+\newcommand{\saba}{\textsc{SABA4}}
+\newcommand{\rkf}{\textsc{RKF7(8)}}
+\newcommand{\orbitn}{\texttt{orbitN}}
+\newcommand{\rebound}{\texttt{REBOUND}}
+
+%% ---- Unità fisiche --------------------------------------------------
+%% \au e \auday sono già in aastex — usiamo versioni estese
+%%\newcommand{\unitAU}{\,\mathrm{AU}}
+%%newcommand{\unitAUd}{\,\mathrm{AU\,day^{-1}}}
+%%\newcommand{\unitAUd2}{\,\mathrm{AU\,day^{-2}}}
+\newcommand{\pAU}{\ensuremath{\,\mathrm{AU}}}
+\newcommand{\pAUd}{\ensuremath{\,\mathrm{AU\,day^{-1}}}}
+\newcommand{\pAUdd}{\ensuremath{\,\mathrm{AU\,day^{-2}}}}
+\providecommand{\unitAU}{\pAU}
+\providecommand{\unitAUd}{\pAUd}
+
+%% ---- Simboli matematici --------------------------------------------
+\newcommand{\dEE}{|\Delta E/E|}
+\newcommand{\tauD}{\hat{\tau}_D}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\rhoH}{\rho(\mathbf{H})}
+\newcommand{\Hess}{\mathbf{H}}
+\newcommand{\STM}{\boldsymbol{\Phi}}
+%% \q e \p collidono con alcuni package — usiamo \vq e \vp (vettori)
+\newcommand{\vq}{\mathbf{q}}
+\newcommand{\vp}{\mathbf{p}}
+\DeclareMathOperator{\tr}{tr}
+\newcommand{\Poisson}[2]{\left\{#1,#2\right\}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+
+%% ---- Giornali non in aastex ----------------------------------------
+\newcommand{\cmda}{Celest.\ Mech.\ Dyn.\ Astron.}
+\newcommand{\physleta}{Phys.\ Lett.\ A}
+\newcommand{\cacm}{Commun.\ ACM}

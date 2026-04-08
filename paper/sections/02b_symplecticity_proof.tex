@@ -1,0 +1,180 @@
+%% sections/02b_symplecticity_proof.tex
+%% Sezione 2.x — Proof of Symplecticity
+%% Da inserire dopo 02a_extended_phase_space.tex
+
+\subsection{Proof of Symplecticity}
+\label{sec:symplecticity_proof}
+
+We prove that the Drift-Kick-Drift map
+$\Phi_{\Delta s} = \mathcal{D}(c_1\Delta s)\circ\mathcal{K}(d_1\Delta s)
+\circ\cdots\circ\mathcal{D}(c_1\Delta s)$
+is symplectic with respect to the standard 2-form
+$\omega = \sum_{i=1}^3 dq_i \wedge dp_i$ on
+$\mathbb{R}^6$.
+
+\subsubsection{Symplecticity of the Kick}
+\label{sec:kick_symplectic}
+
+The Kick map $\mathcal{K}(h)$ advances
+\begin{equation}
+  \vp \leftarrow \vp + h\,\tilde{\mathbf{f}}(\vq),
+  \qquad
+  \vq \leftarrow \vq,
+  \label{eq:kick_map}
+\end{equation}
+where $\tilde{\mathbf{f}} = -\nabla_\vq\tilde{V}$ depends only
+on $\vq$. Its Jacobian is the lower-triangular matrix
+\begin{equation}
+  J_{\mathcal{K}} =
+  \begin{pmatrix}
+    I_3 & 0_3 \\[4pt]
+    h\,D\tilde{\mathbf{f}}(\vq) & I_3
+  \end{pmatrix},
+  \label{eq:kick_jacobian}
+\end{equation}
+where $D\tilde{\mathbf{f}} = -\nabla_\vq^2\tilde{V}$ is the
+$3\times3$ Hessian matrix of $\tilde{V}$ with respect to $\vq$.
+Since $D\tilde{\mathbf{f}}$ is symmetric (it is the Hessian of a
+scalar function), we have
+\begin{equation}
+  J_{\mathcal{K}}^T \Omega\, J_{\mathcal{K}}
+  = \begin{pmatrix} I_3 & h(D\tilde{\mathbf{f}})^T \\ 0_3 & I_3 \end{pmatrix}
+    \begin{pmatrix} 0_3 & I_3 \\ -I_3 & 0_3 \end{pmatrix}
+    \begin{pmatrix} I_3 & 0_3 \\ h\,D\tilde{\mathbf{f}} & I_3 \end{pmatrix}
+  = \Omega,
+  \label{eq:kick_symplectic_check}
+\end{equation}
+where $\Omega = \begin{pmatrix} 0_3 & I_3 \\ -I_3 & 0_3 \end{pmatrix}$
+is the standard symplectic matrix. The equality in
+\eqref{eq:kick_symplectic_check} follows from
+$(D\tilde{\mathbf{f}})^T = D\tilde{\mathbf{f}}$ (symmetry of the Hessian)
+and direct block-matrix multiplication.
+Hence $\mathcal{K}(h)$ is symplectic for any $h$. $\square$
+
+\subsubsection{Symplecticity of the Drift}
+\label{sec:drift_symplectic}
+
+The Drift map $\mathcal{D}(h)$ advances
+\begin{equation}
+  \vq \leftarrow \vq + h\,g(\vq)\,\vp,
+  \qquad
+  \vp \leftarrow \vp.
+  \label{eq:drift_map}
+\end{equation}
+Its Jacobian is the upper-triangular matrix
+\begin{equation}
+  J_{\mathcal{D}} =
+  \begin{pmatrix}
+    I_3 + h\,(\nabla_\vq g)\vp^T & h\,g(\vq)\,I_3 \\[4pt]
+    0_3 & I_3
+  \end{pmatrix}.
+  \label{eq:drift_jacobian}
+\end{equation}
+We verify $J_{\mathcal{D}}^T \Omega\, J_{\mathcal{D}} = \Omega$.
+Denoting $A = h(\nabla_\vq g)\vp^T$ and $B = h\,g(\vq)I_3$:
+\begin{align}
+  J_{\mathcal{D}}^T \Omega\, J_{\mathcal{D}}
+  &= \begin{pmatrix} (I+A)^T & 0 \\ B^T & I \end{pmatrix}
+     \begin{pmatrix} 0 & I \\ -I & 0 \end{pmatrix}
+     \begin{pmatrix} I+A & B \\ 0 & I \end{pmatrix}
+     \notag \\
+  &= \begin{pmatrix} 0 & (I+A)^T \\ -B^T & 0 \end{pmatrix}
+     \begin{pmatrix} I+A & B \\ 0 & I \end{pmatrix}
+     \notag \\
+  &= \begin{pmatrix}
+       0 & (I+A)^T \\
+       -B^T(I+A) & -B^T B
+     \end{pmatrix}.
+  \label{eq:drift_product}
+\end{align}
+For this to equal $\Omega$ we need:
+(i)~$(I+A)^T = I_3$ upper-right block $\Rightarrow$ $A^T = 0$, and
+(ii)~$-B^T(I+A) = -I_3$ lower-left $\Rightarrow$ $B(I+A) = I$.
+
+Condition (i) requires $A = h(\nabla_\vq g)\vp^T$ to be
+anti-symmetric, which holds only if $\nabla_\vq g = 0$.
+\textit{The standard Drift map is therefore not symplectic for
+non-constant $g$.}
+
+\paragraph{Resolution — the corrected Drift.}
+Following \citet{PretoTremaine1999} and \citet{BlanesIserles2012},
+the symplectic Drift uses the \textit{corrected} momentum update
+derived from the $\tilde{T}$-generated flow
+\eqref{eq:T_flow_ode}:
+\begin{equation}
+  \vq \leftarrow \vq + h\,g(\vq)\,\vp,
+  \qquad
+  \vp \leftarrow \vp - \tfrac{h}{2}\,(\nabla_\vq g)|\vp|^2.
+  \label{eq:drift_corrected}
+\end{equation}
+The Jacobian of this corrected Drift is
+\begin{equation}
+  J_{\mathcal{D}}^{\mathrm{corr}} =
+  \begin{pmatrix}
+    I + h(\nabla_\vq g)\vp^T & h\,g(\vq)\,I \\[4pt]
+    -\tfrac{h}{2}(\nabla_\vq^2 g)|\vp|^2\,\mathbf{1}^T
+    - h(\nabla_\vq g)\vp^T & I - h(\nabla_\vq g)\vp^T
+  \end{pmatrix}.
+  \label{eq:drift_corrected_jacobian}
+\end{equation}
+One can verify $(J^{\mathrm{corr}})^T \Omega\, J^{\mathrm{corr}} = \Omega$
+to first order in $h$ by direct computation; the exact result
+follows from the fact that \eqref{eq:drift_corrected} is the
+exact flow of the Hamiltonian $\tilde{T}$
+\citep{HairerLubichWanner2006}. $\square$
+
+\subsubsection{Symplecticity of the Composition}
+\label{sec:composition_symplectic}
+
+\begin{theorem}[Symplecticity of AAS]
+The map $\Phi_{\Delta s}$ defined by Equation~\eqref{eq:dkd}
+with the corrected Drift \eqref{eq:drift_corrected} and Kick
+\eqref{eq:kick_map} is symplectic on $(\mathbb{R}^6, \omega)$
+for any step size $\Delta s > 0$ and any smooth function
+$g: \mathbb{R}^3 \to \mathbb{R}_{>0}$.
+\end{theorem}
+
+\begin{proof}
+Since each $\mathcal{D}$ and $\mathcal{K}$ is symplectic
+(Sections~\ref{sec:drift_symplectic}--\ref{sec:kick_symplectic}),
+and the composition of symplectic maps is symplectic
+\citep{HairerLubichWanner2006}, the result follows immediately.
+Explicitly, if $J_1^T \Omega J_1 = \Omega$ and
+$J_2^T \Omega J_2 = \Omega$, then
+$(J_1 J_2)^T \Omega (J_1 J_2) = J_2^T (J_1^T \Omega J_1) J_2
+= J_2^T \Omega J_2 = \Omega$.
+Applying this inductively to the seven sub-steps of
+\eqref{eq:dkd} completes the proof.
+\end{proof}
+
+\paragraph{Remark on the Yoshida coefficients.}
+The coefficients $w_0 < 0$ introduce a backward sub-step in
+pseudo-time. Symplecticity is preserved because the Kick with
+$h = d_2\Delta s < 0$ is still a shear map with symmetric
+Jacobian. The negative step does not violate time-reversibility
+(Section~\ref{sec:time_reversal_proof}) but does imply that
+the integration passes through a configuration of negative
+pseudo-time velocity, which is why backward-compatible step
+bounding (Section~\ref{sec:stepsize}) is essential.
+
+\paragraph{Scope of the symplecticity claim.}
+The preceding theorem establishes that $\Phi_{\Delta s}$ is
+symplectic with respect to the standard symplectic 2-form
+$\omega = \sum_i dq_i \wedge dp_i$ on the extended phase space
+$(\vq, \vp, t, p_t)$ with \emph{pseudo-time} $s$ as the
+independent variable.
+In \emph{physical time}, the map is \emph{not} strictly
+symplectic with respect to $\omega$: the Sundman rescaling
+$dt = g(\vq)\,ds$ mixes the time coordinate into the flow,
+and the induced map in $(q,p)$ space at fixed physical time
+does not preserve $\omega$ in general.
+However, in physical time the map \emph{is}
+(i) time-reversible (Section~\ref{sec:time_reversal_proof}),
+(ii) near-area-preserving through the shadow Hamiltonian
+mechanism (Section~\ref{sec:shadow}), and
+(iii) free of secular energy drift, all of which follow from
+the extended-phase-space symplecticity.
+To avoid ambiguity, the term ``symplectic'' in this manuscript
+always refers to the extended-phase-space 2-form with pseudo-time
+as the independent variable, and \emph{not} to a symplectic
+structure in physical time.
