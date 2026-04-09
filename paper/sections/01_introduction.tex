@@ -8,8 +8,8 @@ integrators that are simultaneously accurate, fast, and structurally
 stable. Symplectic integrators \citep{WisdomHolman1991, Yoshida1990}
 are the method of choice because they preserve the geometric structure
 of Hamiltonian flow, preventing secular energy drift over millions of
-orbital periods \citep{HairerLubichWanner2006}. However, standard
-adaptive integrators with symplectic kernel use a fixed time step, which is computationally
+orbital periods \citep{HairerLubichWanner2006, Lu2024trace, Ye2025}. However, 
+standard symplectic integrators use a fixed time step, which is computationally
 inefficient for eccentric orbits: the step appropriate near perihelion
 is unnecessarily small near aphelion.
 
@@ -33,7 +33,7 @@ showed that a Sundman-type reparametrization $dt = g(\mathbf{q})\,ds$
 can preserve symplecticity when $g$ depends only on position
 coordinates. \citet{BlanesIserles2012} subsequently unified and
 extended these approaches in a general framework for separable
-Hamiltonians.
+Hamiltonians \cite{Wang2024tts, Wu2024adaptive}.
 The key design question is the choice of $g(\mathbf{q})$. Previous
 implementations have used functions of inter-particle separation
 \citep{PretoTremaine1999} or the logarithmic Hamiltonian
@@ -105,5 +105,9 @@ OD = orbit determination. STM = State Transition Matrix.
 occultation-oriented pipeline.
 }
 \end{table*}
+High-accuracy non-symplectic alternatives---\textsc{ias15}
+\citep{ReinSpiegel2015} and \textsc{heyoka}
+\citep{Biscani2021heyoka}---are included as reference
+integrators in Section~\ref{sec:comparison}.
 Section~\ref{sec:discussion} discusses the results and limitations.
 Section~\ref{sec:conclusions} summarizes the conclusions.

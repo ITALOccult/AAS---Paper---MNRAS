@@ -26,6 +26,9 @@ a factor $2.42$ higher cost at equal accuracy.
 Accordingly, this benchmark should not be interpreted as a global
 speedup claim for \AAS; rather, it quantifies a trade-off between
 geometric fidelity and computational cost in the tested regime.
+The efficiency advantage of adaptive step-size symplectic integration
+for high-eccentricity orbits is also documented in recent works
+\citep{Wang2024tts, Ye2025}.
 
 \subsection{Comparison with \orbitn\ and \rebound}
 \label{sec:comparison}
@@ -54,6 +57,10 @@ reported in the companion paper (Bigi, in prep.).
 We include a direct comparison with \textsc{ias15}
 \citep{ReinSpiegel2015}, the 15th-order Gauss--Radau
 integrator implemented in \textsc{rebound} \citep{ReinLiu2012}.
+The Taylor-series-based \textsc{heyoka} integrator
+\citep{Biscani2021heyoka} represents a further non-symplectic
+alternative achieving sub-machine-precision accuracy for
+astrodynamics problems.
 \textsc{ias15} is the standard high-accuracy reference for
 single-body integrations; it is not symplectic and does not
 preserve a shadow Hamiltonian.
@@ -221,6 +228,7 @@ The current \AAS\ implementation has the following limitations.
 \textit{Close encounters.} The Hessian metric becomes inaccurate
 when inter-body forces are comparable to the central-body force.
 A switching strategy such as that of \citet{HernandezDehnen2024}
+or time-reversible close-encounter regularization \citep{Lu2024trace}
 would be required for asteroid--planet flyby scenarios.
 
 \textit{N-body perturbations.} When planetary perturbations are
